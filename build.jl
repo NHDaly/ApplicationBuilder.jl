@@ -6,6 +6,7 @@ mkpath("builddir")
 appDir="$(pwd())/builddir/$APPNAME.app/Contents"
 
 launcherDir="$appDir/MacOS"
+resourcesDir="$appDir/Resources"
 scriptsDir="$appDir/Resources/scripts"
 
 jlPkgDir="$appDir/Resources/julia_pkgs/"
@@ -17,6 +18,7 @@ mkpath(jlPkgDir)
 
 julia_scripts = filter(r".*\.jl", readlines(`ls`))
 run(`cp $julia_scripts $scriptsDir/`)
+run(`cp -r assets $resourcesDir/`) # note this copies the entire *dir* to Resources
 # Copy launch script -- note deleting the `.sh`
 cp("$APPNAME.sh", "$launcherDir/$APPNAME", remove_destination=true)
 run(`chmod +x "$launcherDir/$APPNAME"`)
