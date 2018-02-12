@@ -55,7 +55,9 @@ set_julia_dir(origPkgDir)
 
 # ---------- Copy Julia --------------------
 run(`cp -r "/Applications/Julia-0.6.app" "$launcherDir/"`)
-run(`ln -s "./Julia-0.6.app/Contents/Resources/julia/bin/julia" "$launcherDir/julia"`)
+try  # okay if the alias already exists (if you're re-running this script).
+    run(`ln -s "./Julia-0.6.app/Contents/Resources/julia/bin/julia" "$launcherDir/julia"`)
+end
 
 # ------- MUST BE SURE TO DO THIS LAST STEP RIGHT BEFORE SHIPPING!! ----------
 # The shipped binary cannot contain any precompiled cache .ji files. You *must*
