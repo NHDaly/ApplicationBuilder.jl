@@ -4,7 +4,7 @@ APPNAME="PowerPong"
 
 jl_main_file = "pongmain.jl"
 binary_name = match(r"([^/.]+)\.jl$", jl_main_file).captures[1]
-bundle_identifier = "com.nhdaly.$binary_name"
+bundle_identifier = lowercase("com.$(ENV["USER"]).$APPNAME")
 bundle_version = "0.1"
 #icns_file = nothing
 icns_file = "icns.icns"
@@ -29,8 +29,8 @@ println("~~~~~~ Copying '$user_libs_dir' & '$user_assets_dir' to bundle... ~~~~~
 
 # Copy assets and libs early so they're available during compilation.
 #  This is mostly relevant if you have .dylibs in your assets, which the compiler wants to look at.
-run(`cp -rf $user_assets_dir $resourcesDir/`) # note this copies the entire *dir* to Resources
-run(`cp -rf $(glob("*",user_libs_dir)) $libsDir/`) # note this copies the entire *dir* to Resources
+isdir(user_assets_dir) && run(`cp -rf $user_assets_dir $resourcesDir/`) # note this copies the entire *dir* to Resources
+isdir(user_libs_dir) && run(`cp -rf $(glob("*",user_libs_dir)) $libsDir/`) # note this copies the entire *dir* to Resources
 
 # ----------- Copy julia system libs ---------------------
 println("~~~~~~ Copying julia system libs to bundle... ~~~~~~~")
