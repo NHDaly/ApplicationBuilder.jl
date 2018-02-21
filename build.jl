@@ -11,33 +11,29 @@ icns_file = "icns.icns"
 user_assets_dir = "assets"    # Contents will be copied to Resources/assets/
 user_libs_dir = "libs"        # Contents will be copied to Libraries/
 
-# NOTES:
-# TODO: Make a new Package for the SDL binaries so you don't have to download
-# them and also don't bloat SDL2.jl
-# TODO: Send a PR to rename SDL.jl package to SDL2.jl
-
 # ----------- Initialize App ---------------------
+println("~~~~~~ Creating mac app in $(pwd())/builddir/$APPNAME.app ~~~~~~~")
+
 appDir="$(pwd())/builddir/$APPNAME.app/Contents"
-println("~~~~~~ Creating mac app in $appDir ~~~~~~~")
 
 launcherDir="$appDir/MacOS"
 resourcesDir="$appDir/Resources"
 libsDir="$appDir/Libraries"
 
-#jlPkgDir="$appDir/Resources/julia_pkgs/"
-
 mkpath(launcherDir)
 mkpath(resourcesDir)
 mkpath(libsDir)
-#mkpath(jlPkgDir)
+
+# ----------- Copy user libs & assets -------------
+println("~~~~~~ Copying '$user_libs_dir' & '$user_assets_dir' to bundle... ~~~~~~~")
 
 # Copy assets and libs early so they're available during compilation.
 #  This is mostly relevant if you have .dylibs in your assets, which the compiler wants to look at.
 run(`cp -rf $user_assets_dir $resourcesDir/`) # note this copies the entire *dir* to Resources
 run(`cp -rf $(glob("*",user_libs_dir)) $libsDir/`) # note this copies the entire *dir* to Resources
 
-
-# ----------- Copy julia libs ---------------------
+# ----------- Copy julia system libs ---------------------
+println("~~~~~~ Copying julia system libs to bundle... ~~~~~~~")
 
 function julia_app_resources_dir()
     cmd_strings = Base.shell_split(string(Base.julia_cmd()))
@@ -63,22 +59,6 @@ run(setenv(`julia $(Pkg.dir())/PackageCompiler/juliac.jl -ae $jl_main_file
              "$(Pkg.dir())/PackageCompiler/examples/program.c" $launcherDir`,
            env))
 
-# Keep everything absolute directories.
-#binary_fullpath = "$(pwd())/builddir/$output_binary_name"
-#dylib_fullpath = "$(pwd())/builddir/$output_binary_name"
-
-
-## Copy binary and .dylib to .app destination. Note that we're renaming them.
-#cp(binary_fullpath, "$launcherDir/$APPNAME", remove_destination=true)
-#cp(dylib_fullpath, "$launcherDir/$APPNAME.dylib", remove_destination=true)
-#run(`chmod +x "$launcherDir/$APPNAME"`)
-#run(`chmod +x "$launcherDir/$APPNAME.dylib"`)
-## Now fix the LC_LOAD_DYLIB path to point to the new .dylib name, since we renamed them:
-#run(`install_name_tool -change "@rpath/$output_binary_name.dylib"
-#         "@executable_path/$APPNAME.dylib" "$launcherDir/$APPNAME"`)
-#run(`install_name_tool -change "@rpath/$output_binary_name.dylib"
-#         "@rpath/$APPNAME.dylib" "$launcherDir/$APPNAME.dylib"`)
-
 run(`install_name_tool -add_rpath "@executable_path/../Libraries/" "$launcherDir/$binary_name"`)
 run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name"`)
 
@@ -89,6 +69,7 @@ run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launch
 
 # ---------- Create Info.plist to tell it where to find stuff! ---------
 # This lets you have a different app name from your jl_main_file.
+println("~~~~~~ Generating 'Info.plist' for '$bundle_identifier'... ~~~~~~~")
 
 info_plist() = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -138,41 +119,17 @@ write("$appDir/Info.plist", info_plist());
 if (icns_file == nothing) icns_file = julia_app_resources_dir()*"/julia.icns" end
 cp(icns_file, "$resourcesDir/$APPNAME.icns", remove_destination=true);
 
-## ----------- Copy Packages ---------------------
-#version=(jl_v=Base.VERSION; "v$(jl_v.major).$(jl_v.minor)")
-#mkpath("$jlPkgDir/$version")
-#
-## INIT package dir
-#function set_julia_dir(dir::String)
-#    ENV["JULIA_PKGDIR"] = dir
-#    Pkg.init()
-#    Pkg.__init__()
-#    pop!(Base.LOAD_CACHE_PATH)
-#    return Pkg.dir()
-#end
-#
-#origPkgDir = Pkg.dir()
-#newPkgDir = set_julia_dir(jlPkgDir)
-#
-#origPkgDir
-#package_names = filter(r".*\.jl", readlines("REQUIRES"))
-#for pkg in package_names
-#    pkgName = split(pkg, ".jl")[1]
-#    #run(`cp -r "$origPkgDir/$pkgName" "$newPkgDir/$pkgName"`)
-#    #run(`echo "$pkgName" >> "$newPkgDir/REQUIRE"`)
-#    try
-#        Pkg.clone("$origPkgDir/$pkgName/.git", pkgName)
-#    catch end
-#end
-#
-#set_julia_dir(origPkgDir)
+# --------------- CLEAN UP before distributing ---------------
+println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
 
-# ~~~~~~~~~~~ CLEAN UP before distributing ~~~~~~~~~~
-# When you're all done, right before releasing, be sure to delete your tmp build files.
+# Delete the tmp build files
 rm("$launcherDir/tmp_v$(string(Base.VERSION))", recursive=true)
+
 # Remove debug .dylib libraries and precompiled .ji's
 run(`rm -r $(glob("*.dSYM",libsDir))`)
 run(`rm -r $(glob("*.dSYM","$libsDir/julia"))`)
 run(`rm -r $(glob("*.backup","$libsDir/julia"))`)
 run(`rm -r $(glob("*.ji","$libsDir/julia"))`)
 run(`rm -r $(glob("*.o","$libsDir/julia"))`)
+
+println("~~~~~~ Done building 'builddir/$APPNAME.app'! ~~~~~~~")
