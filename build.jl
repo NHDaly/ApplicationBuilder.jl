@@ -100,6 +100,8 @@ info_plist() = """
     	<string></string>
     	<key>CFBundleVersion</key>
     	<string>$bundle_version</string>
+        <key>NSHighResolutionCapable</key>
+        <string>YES</string>
     	<key>LSMinimumSystemVersionByArchitecture</key>
     	<dict>
     		<key>x86_64</key>
