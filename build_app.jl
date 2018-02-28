@@ -44,9 +44,9 @@ s = ArgParseSettings()
 end
 s.epilog = """
     examples:\n
-    # Build HelloApp.app from hello.jl\n
+    \ua0\ua0 # Build HelloApp.app from hello.jl\n
     \ua0\ua0 build.jl hello.jl HelloApp\n
-    # Build MyGame, and copy in imgs/, mus.wav and all files in libs/\n
+    \ua0\ua0 # Build MyGame, and copy in imgs/, mus.wav and all files in libs/\n
     \ua0\ua0 build.jl -R imgs -R mus.wav -L lib/* main.jl MyGame
     """
 
