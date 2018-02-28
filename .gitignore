@@ -1,0 +1,11 @@
+# Mac
+.DS_Store
+
+# Editor temp files
+*~
+.*.swp
+Session.vim
+
+# Build outputs
+builddir
+
