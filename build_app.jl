@@ -92,21 +92,6 @@ for lib in user_libs
     run_verbose(verbose, `cp -rf $(glob(lib)) $libsDir/`) # note this copies the entire *dir* to Resources
 end
 
-# ----------- Copy julia system libs ---------------------
-println("~~~~~~ Copying julia system libs to bundle... ~~~~~~~")
-
-function julia_app_resources_dir()
-    cmd_strings = Base.shell_split(string(Base.julia_cmd()))
-    dashJ_cmd = cmd_strings[3]
-    julia_dir = dashJ_cmd[findfirst("/", dashJ_cmd)[1]:findlast("/Contents/Resources", dashJ_cmd)[end]]
-end
-function julia_libs_dir()
-    julia_app_resources_dir()*"/julia/lib", julia_app_resources_dir()*"/julia/lib/julia"
-end
-
-julia_lib, julia_lib_julia = julia_libs_dir()
-run(`cp -r $julia_lib/ $libsDir`)
-
 # ----------- Compile a binary ---------------------
 # Compile the binary right into the app.
 println("~~~~~~ Compiling a binary from '$jl_main_file'... ~~~~~~~")
@@ -115,15 +100,16 @@ println("~~~~~~ Compiling a binary from '$jl_main_file'... ~~~~~~~")
 env = copy(ENV)
 env["LD_LIBRARY_PATH"]="$libsDir:$libsDir/julia"
 env["COMPILING_APPLE_BUNDLE"]="true"
-run(setenv(`julia $(Pkg.dir())/PackageCompiler/juliac.jl -ae $jl_main_file
+# Compile executable and copy julia libs to $launcherDir.
+run(setenv(`julia $(Pkg.dir())/PackageCompiler/juliac.jl -aej $jl_main_file
              "$(Pkg.dir())/PackageCompiler/examples/program.c" $launcherDir`,
            env))
 
 run(`install_name_tool -add_rpath "@executable_path/../Libraries/" "$launcherDir/$binary_name"`)
-run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name"`)
+#run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name"`)
 
 run(`install_name_tool -add_rpath "@executable_path/../Libraries/" "$launcherDir/$binary_name.dylib"`)
-run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name.dylib"`)
+#run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name.dylib"`)
 
 
 
