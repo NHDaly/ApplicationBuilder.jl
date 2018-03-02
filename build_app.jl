@@ -63,6 +63,10 @@ user_resources = parsed_args["resource"]
 user_libs = parsed_args["lib"]        # Contents will be copied to Libraries/
 verbose = parsed_args["verbose"]
 
+# ----------- Input sanity checking --------------
+
+if !isfile(jl_main_file) throw(ArgumentError("Cannot build application. No such file '$jl_main_file'")) end
+
 # ----------- Initialize App ---------------------
 println("~~~~~~ Creating mac app in $(pwd())/builddir/$APPNAME.app ~~~~~~~")
 
@@ -85,11 +89,19 @@ run_verbose(verbose, cmd) = (verbose && println("    julia> run($cmd)") ; run(cm
 
 for res in user_resources
     println("  .. $res ..")
-    run_verbose(verbose, `cp -rf $(glob(res)) $resourcesDir/`) # note this copies the entire *dir* to Resources
+    if isempty(glob(res))
+         println("WARNING: Skipping empty resource '$res'!")
+     else
+         run_verbose(verbose, `cp -rf $(glob(res)) $resourcesDir/`) # note this copies the entire *dir* to Resources
+     end
 end
 for lib in user_libs
     println("  .. $lib ..")
-    run_verbose(verbose, `cp -rf $(glob(lib)) $libsDir/`) # note this copies the entire *dir* to Resources
+    if isempty(glob(lib))
+         println("WARNING: Skipping empty resource '$lib'!")
+     else
+         run_verbose(verbose, `cp -rf $(glob(lib)) $libsDir/`) # note this copies the entire *dir* to Resources
+     end
 end
 
 # ----------- Compile a binary ---------------------
@@ -134,19 +146,17 @@ info_plist() = """
     	<string>$APPNAME.icns</string>
     	<key>CFBundleIdentifier</key>
     	<string>$bundle_identifier</string>
-    	<key>CFBundleInfoDictionaryVersion</key>
-    	<string>$bundle_version</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
     	<key>CFBundleName</key>
     	<string>$APPNAME</string>
     	<key>CFBundlePackageType</key>
     	<string>APPL</string>
     	<key>CFBundleShortVersionString</key>
     	<string>$bundle_version</string>
-    	<key>CFBundleSignature</key>
-    	<string></string>
     	<key>CFBundleVersion</key>
     	<string>$bundle_version</string>
-        <key>NSHighResolutionCapable</key>
+    	<key>NSHighResolutionCapable</key>
         <string>YES</string>
     	<key>LSMinimumSystemVersionByArchitecture</key>
     	<dict>
@@ -171,14 +181,18 @@ cp(icns_file, "$resourcesDir/$APPNAME.icns", remove_destination=true);
 println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
 
 # Delete the tmp build files
-run(`rm -r $(glob("*.ji",launcherDir))`)
-run(`rm -r $(glob("*.o",launcherDir))`)
+function delete_if_present(file, path)
+    files = glob(file,launcherDir)
+    if !isempty(files) run(`rm -r $(files)`) end
+end
+delete_if_present("*.ji",launcherDir)
+delete_if_present("*.o",launcherDir)
 
-# Remove debug .dylib libraries and precompiled .ji's
-run(`rm -r $(glob("*.dSYM",libsDir))`)
-run(`rm -r $(glob("*.dSYM","$libsDir/julia"))`)
-run(`rm -r $(glob("*.backup","$libsDir/julia"))`)
-run(`rm -r $(glob("*.ji","$libsDir/julia"))`)
-run(`rm -r $(glob("*.o","$libsDir/julia"))`)
+# Remove debug .dylib libraries and any precompiled .ji's
+delete_if_present("*.dSYM",libsDir)
+delete_if_present("*.dSYM","$libsDir/julia")
+delete_if_present("*.backup","$libsDir/julia")
+delete_if_present("*.ji","$libsDir/julia")
+delete_if_present("*.o","$libsDir/julia")
 
 println("~~~~~~ Done building 'builddir/$APPNAME.app'! ~~~~~~~")
