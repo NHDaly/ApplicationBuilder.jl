@@ -113,9 +113,10 @@ env = copy(ENV)
 env["LD_LIBRARY_PATH"]="$libsDir:$libsDir/julia"
 env["COMPILING_APPLE_BUNDLE"]="true"
 # Compile executable and copy julia libs to $launcherDir.
-run(setenv(`julia $(Pkg.dir())/PackageCompiler/juliac.jl -aej $jl_main_file
-             "$(Pkg.dir())/PackageCompiler/examples/program.c" $launcherDir`,
-           env))
+juliac_cmd = `julia $(Pkg.dir())/PackageCompiler/juliac.jl -aej -Cx86-64 --ccflags='-mmacosx-version-min=10.10' $jl_main_file
+                 "$(Pkg.dir())/PackageCompiler/examples/program.c" $launcherDir`
+verbose && insert!(juliac_cmd.exec, 3, "-v")
+run(setenv(juliac_cmd, env))
 
 run(`install_name_tool -add_rpath "@executable_path/../Libraries/" "$launcherDir/$binary_name"`)
 #run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name"`)
