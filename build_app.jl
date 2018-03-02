@@ -41,6 +41,12 @@ s = ArgParseSettings()
         default = nothing
         metavar = "<file>"
         help = ".icns file to be used as the app's icon"
+    "--app_version"
+        arg_type = String
+        default = "0.1"
+        #range_tester = (x -> r"^[0-9]+(\.[0-9]+)*$"(x))  # can the version have other characters in it? idk..
+        metavar = "0.0.1"
+        help = ".icns file to be used as the app's icon"
 end
 s.epilog = """
     examples:\n
@@ -57,7 +63,7 @@ APPNAME=parsed_args["appname"]
 jl_main_file = parsed_args["juliaprog_main"]
 binary_name = match(r"([^/.]+)\.jl$", jl_main_file).captures[1]
 bundle_identifier = lowercase("com.$(ENV["USER"]).$APPNAME")
-bundle_version = "0.1"
+app_version = parsed_args["app_version"]
 icns_file = parsed_args["icns"]
 user_resources = parsed_args["resource"]
 user_libs = parsed_args["lib"]        # Contents will be copied to Libraries/
@@ -154,9 +160,9 @@ info_plist() = """
     	<key>CFBundlePackageType</key>
     	<string>APPL</string>
     	<key>CFBundleShortVersionString</key>
-    	<string>$bundle_version</string>
+    	<string>$app_version</string>
     	<key>CFBundleVersion</key>
-    	<string>$bundle_version</string>
+    	<string>$app_version</string>
     	<key>NSHighResolutionCapable</key>
         <string>YES</string>
     	<key>LSMinimumSystemVersionByArchitecture</key>
@@ -172,6 +178,7 @@ info_plist() = """
     </plist>
     """
 
+verbose && println(info_plist())
 write("$appDir/Info.plist", info_plist());
 
 # Copy Julia icons
