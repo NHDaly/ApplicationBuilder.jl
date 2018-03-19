@@ -1,5 +1,7 @@
 using Glob, ArgParse
 
+include("sign_mac_app.jl")
+
 s = ArgParseSettings()
 
 @add_arg_table s begin
@@ -47,6 +49,16 @@ s = ArgParseSettings()
         #range_tester = (x -> r"^[0-9]+(\.[0-9]+)*$"(x))  # can the version have other characters in it? idk..
         metavar = "0.0.1"
         help = ".icns file to be used as the app's icon"
+    "--certificate"
+        arg_type = String
+        default = nothing
+        metavar = "<cert_name>"
+        help = "name of the certificate to use to sign the app"
+    "--entitlements"
+        arg_type = String
+        default = nothing
+        metavar = "<file>"
+        help = ".entitlements file. Must set --certificate to add entitlements."
 end
 s.epilog = """
     examples:\n
@@ -68,6 +80,8 @@ icns_file = parsed_args["icns"]
 user_resources = parsed_args["resource"]
 user_libs = parsed_args["lib"]        # Contents will be copied to Libraries/
 verbose = parsed_args["verbose"]
+certificate = parsed_args["certificate"]
+entitlements_file = parsed_args["entitlements"]
 
 # ----------- Input sanity checking --------------
 
@@ -203,5 +217,13 @@ delete_if_present("*.dSYM","$libsDir/julia")
 delete_if_present("*.backup","$libsDir/julia")
 delete_if_present("*.ji","$libsDir/julia")
 delete_if_present("*.o","$libsDir/julia")
+
+println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
+if certificate != nothing
+    sign_application_libs(launcherDir, certificate)
+    if entitlements_file != nothing
+        set_entitlements("$launcherDir/$binary_name", certificate, entitlements_file)
+    end
+end
 
 println("~~~~~~ Done building 'builddir/$APPNAME.app'! ~~~~~~~")
