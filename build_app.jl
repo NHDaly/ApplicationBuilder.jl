@@ -38,6 +38,11 @@ s = ArgParseSettings()
                   MyApp.app/Contents/Libraries/. This should be done for all
                   libraries that your app will need to reference at
                   runtime. Can be repeated."""
+    "--bundle_identifier"
+        arg_type = String
+        default = nothing
+        metavar = "com.user.appname"
+        help = "the bundle identifier for this app. Default: 'com.<USER>.<appname>'."
     "--icns"
         arg_type = String
         default = nothing
@@ -74,7 +79,8 @@ APPNAME=parsed_args["appname"]
 
 jl_main_file = parsed_args["juliaprog_main"]
 binary_name = match(r"([^/.]+)\.jl$", jl_main_file).captures[1]
-bundle_identifier = lowercase("com.$(ENV["USER"]).$APPNAME")
+bundle_identifier = parsed_args["bundle_identifier"]
+bundle_identifier == nothing && (bundle_identifier = lowercase("com.$(ENV["USER"]).$APPNAME"))
 app_version = parsed_args["app_version"]
 icns_file = parsed_args["icns"]
 user_resources = parsed_args["resource"]
