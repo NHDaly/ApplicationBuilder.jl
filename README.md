@@ -48,3 +48,7 @@ hopefully eventually cover all OSes.
 The goal of this tool is to allow you to distribute an entirely standalone
 application from your julia code. That is, someone should be able to download
 your application and run it without having Julia installed.
+
+# License
+This project is licensed under the terms of the MIT license.
+
