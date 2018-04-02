@@ -201,7 +201,7 @@ info_plist() = """
     	<key>LSRequiresCarbon</key>
     	<true/>
     	<key>NSHumanReadableCopyright</key>
-    	<string>© 2016 $bundle_identifier </string>
+    	<string>© 2018 $bundle_identifier </string>
     </dict>
     </plist>
     """
