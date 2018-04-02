@@ -79,8 +79,12 @@ APPNAME=parsed_args["appname"]
 
 jl_main_file = parsed_args["juliaprog_main"]
 binary_name = match(r"([^/.]+)\.jl$", jl_main_file).captures[1]
+builddir = parsed_args["builddir"]
 bundle_identifier = parsed_args["bundle_identifier"]
-bundle_identifier == nothing && (bundle_identifier = lowercase("com.$(ENV["USER"]).$APPNAME"))
+if bundle_identifier == nothing
+    bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$APPNAME"), r"\s", "")
+    println("  Calculated bundle_identifier: '$bundle_identifier'")
+end
 app_version = parsed_args["app_version"]
 icns_file = parsed_args["icns"]
 user_resources = parsed_args["resource"]
@@ -92,11 +96,14 @@ entitlements_file = parsed_args["entitlements"]
 # ----------- Input sanity checking --------------
 
 if !isfile(jl_main_file) throw(ArgumentError("Cannot build application. No such file '$jl_main_file'")) end
+# Bundle identifier requirements: https://apple.stackexchange.com/a/238381/52530
+if contains(bundle_identifier, r"\s") throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
+if contains(bundle_identifier, r"[^A-Za-z0-9-.]") throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
 
 # ----------- Initialize App ---------------------
-println("~~~~~~ Creating mac app in $(pwd())/builddir/$APPNAME.app ~~~~~~~")
+println("~~~~~~ Creating mac app in \"$(pwd())/$builddir/$APPNAME.app\" ~~~~~~~")
 
-appDir="$(pwd())/builddir/$APPNAME.app/Contents"
+appDir="$(pwd())/$builddir/$APPNAME.app/Contents"
 
 launcherDir="$appDir/MacOS"
 resourcesDir="$appDir/Resources"
@@ -232,4 +239,4 @@ if certificate != nothing
     end
 end
 
-println("~~~~~~ Done building 'builddir/$APPNAME.app'! ~~~~~~~")
+println("~~~~~~ Done building '$builddir/$APPNAME.app'! ~~~~~~~")
