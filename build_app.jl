@@ -120,21 +120,27 @@ println("~~~~~~ Copying user-specified libraries & resources to bundle... ~~~~~~
 
 run_verbose(verbose, cmd) = (verbose && println("    julia> run($cmd)") ; run(cmd))
 
-for res in user_resources
-    println("  .. $res ..")
-    if isempty(glob(res))
-         println("WARNING: Skipping empty resource '$res'!")
-     else
-         run_verbose(verbose, `cp -rf $(glob(res)) $resourcesDir/`) # note this copies the entire *dir* to Resources
-     end
+function copy_file_dir_or_glob(pattern, dest)
+    if isfile(pattern)
+        run_verbose(verbose, `cp -f $pattern $dest/`) # Copy the file to dest
+    elseif isdir(pattern)
+      run_verbose(verbose, `cp -rf $pattern $dest/`) # Copy the entire *dir* (not its contents) to dest.
+    elseif !isempty(glob(pattern))
+        run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
+    else
+        println("WARNING: Skipping unknown file '$pattern'!")
+    end
 end
+
+println("  Resources:")
+for res in user_resources
+    println("   .. $res ..")
+    copy_file_dir_or_glob(res, resourcesDir)
+end
+println("  Libraries:")
 for lib in user_libs
-    println("  .. $lib ..")
-    if isempty(glob(lib))
-         println("WARNING: Skipping empty resource '$lib'!")
-     else
-         run_verbose(verbose, `cp -rf $(glob(lib)) $libsDir/`) # note this copies the entire *dir* to Resources
-     end
+    println("   .. $lib ..")
+    copy_file_dir_or_glob(lib, libsDir)
 end
 
 # ----------- Compile a binary ---------------------
