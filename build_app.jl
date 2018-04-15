@@ -216,6 +216,7 @@ verbose && println(info_plist())
 write("$appDir/Info.plist", info_plist());
 
 # Copy Julia icons
+julia_app_resources_dir() = joinpath(Base.JULIA_HOME, "../..")
 if (icns_file == nothing) icns_file = julia_app_resources_dir()*"/julia.icns" end
 cp(icns_file, "$resourcesDir/$APPNAME.icns", remove_destination=true);
 
