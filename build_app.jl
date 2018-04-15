@@ -158,11 +158,30 @@ verbose && println("  $juliac_cmd")
 verbose && insert!(juliac_cmd.exec, 3, "-v")
 run(setenv(juliac_cmd, env))
 
-run(`install_name_tool -add_rpath "@executable_path/../Libraries/" "$launcherDir/$binary_name"`)
-#run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name"`)
+for b in ["$launcherDir/$binary_name", "$launcherDir/$binary_name.dylib"]
+    run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Frameworks/" $b`)
+    run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Libraries/" $b`)
+end
 
-run(`install_name_tool -add_rpath "@executable_path/../Libraries/" "$launcherDir/$binary_name.dylib"`)
-#run(`install_name_tool -add_rpath "@executable_path/../Libraries/julia" "$launcherDir/$binary_name.dylib"`)
+# In order to pass Apple's GateKeeper, the App must not reference any external Julia libs.
+for binary_file in glob("*", launcherDir)
+    try
+        #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
+        external_julia_deps = readlines(pipeline(`otool -l $binary_file`, `grep '/julia'`,
+                                                `sed 's/\s*path//'`, # remove leading "  path"
+                                                `sed 's/(.*)$//'`)) # remove trailing parens
+        for line in external_julia_deps
+            path = strip(line)
+            run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
+        end
+    end
+end
+
+# Move julia libs to Frameworks directory.
+frameworksDir="$appDir/Frameworks"
+mkpath(frameworksDir)
+juliaLibs = filter(l->!Regex("^$launcherDir/$binary_name(.dylib)*\$")(l), glob("*",launcherDir))
+run(`mv $(juliaLibs) $frameworksDir`)
 
 
 
@@ -230,6 +249,8 @@ function delete_if_present(file, path)
 end
 delete_if_present("*.ji",launcherDir)
 delete_if_present("*.o",launcherDir)
+delete_if_present("*.ji",frameworksDir)
+delete_if_present("*.o",frameworksDir)
 
 # Remove debug .dylib libraries and any precompiled .ji's
 delete_if_present("*.dSYM",libsDir)
@@ -240,6 +261,7 @@ delete_if_present("*.o","$libsDir/julia")
 
 println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
 if certificate != nothing
+    sign_application_libs(frameworksDir, certificate)
     sign_application_libs(launcherDir, certificate)
     if entitlements_file != nothing
         set_entitlements("$launcherDir/$binary_name", certificate, entitlements_file)
