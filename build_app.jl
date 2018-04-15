@@ -177,14 +177,6 @@ for binary_file in glob("*", launcherDir)
     end
 end
 
-# Move julia libs to Frameworks directory.
-frameworksDir="$appDir/Frameworks"
-mkpath(frameworksDir)
-juliaLibs = filter(l->!Regex("^$launcherDir/$binary_name(.dylib)*\$")(l), glob("*",launcherDir))
-run(`mv $(juliaLibs) $frameworksDir`)
-
-
-
 # ---------- Create Info.plist to tell it where to find stuff! ---------
 # This lets you have a different app name from your jl_main_file.
 println("~~~~~~ Generating 'Info.plist' for '$bundle_identifier'... ~~~~~~~")
@@ -249,8 +241,6 @@ function delete_if_present(file, path)
 end
 delete_if_present("*.ji",launcherDir)
 delete_if_present("*.o",launcherDir)
-delete_if_present("*.ji",frameworksDir)
-delete_if_present("*.o",frameworksDir)
 
 # Remove debug .dylib libraries and any precompiled .ji's
 delete_if_present("*.dSYM",libsDir)
@@ -261,7 +251,6 @@ delete_if_present("*.o","$libsDir/julia")
 
 println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
 if certificate != nothing
-    sign_application_libs(frameworksDir, certificate)
     sign_application_libs(launcherDir, certificate)
     if entitlements_file != nothing
         set_entitlements("$launcherDir/$binary_name", certificate, entitlements_file)
