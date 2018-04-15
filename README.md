@@ -35,20 +35,36 @@ optional arguments:
 
   examples:
      # Build HelloApp.app from hello.jl
-     build.jl hello.jl HelloApp
+     build_app.jl hello.jl HelloApp
      # Build MyGame, and copy in imgs/, mus.wav and all files in libs/
-     build.jl -R imgs -R mus.wav -L lib/* main.jl MyGame
+     build_app.jl -R imgs -R mus.wav -L lib/* main.jl MyGame
  ```
 
- ------------------
+------------------
 
-Right now, this tool only works for building macOS applications, but will
+## Compatibility
+
+Right now, this tool only works for building `macOS` applications, but will
 hopefully eventually cover all OSes.
 
 The goal of this tool is to allow you to distribute an entirely standalone
 application from your julia code. That is, someone should be able to download
 your application and run it without having Julia installed.
 
+## Running an example:
+After cloning the repository, you can build an App out of the example program, `examples/hello.jl`, like this:
+
+```bash
+$ julia build_app.jl -v examples/hello.jl "HelloWorld"
+```
+
+This will produce `builddir/HelloWorld.app`, which you can double click, and it will indeed greet you!
+
+The simple example HelloWorld.app has no binary dependencies -- that is, it
+doesn't need any extra libraries besides Julia. Many Julia packages come bundled
+with their own binary dependencies, and if you want to use them in your app,
+you'll have to add those dependencies via the flags `-L` for libs and `-R` for
+bundle resources.
+
 # License
 This project is licensed under the terms of the MIT license.
-
