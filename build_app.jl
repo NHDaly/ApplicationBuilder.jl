@@ -28,7 +28,11 @@ s = ArgParseSettings()
         help = """specify files or directories to be copied to
                   MyApp.app/Contents/Resources/. This should be done for all
                   resources that your app will need to have available at
-                  runtime. Can be repeated."""
+                  runtime. Can be repeated.
+
+                  NOTE: following the system conventions, -R /path/dir will copy
+                  "dir" to Resources/, but -R /path/dir/ will copy all *contents*
+                  of `dir/*` to Resources/."""
     "--lib", "-L"
         arg_type = String
         action = :append_arg  # Can specify multiple
@@ -134,13 +138,15 @@ end
 
 println("  Resources:")
 for res in user_resources
-    println("   .. $res ..")
+    print("    - $res ...")
     copy_file_dir_or_glob(res, resourcesDir)
+    println("............ done")
 end
 println("  Libraries:")
 for lib in user_libs
-    println("   .. $lib ..")
+    print("    - $lib ...")
     copy_file_dir_or_glob(lib, libsDir)
+    println("............ done")
 end
 
 # ----------- Compile a binary ---------------------
