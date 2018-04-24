@@ -1,4 +1,5 @@
 # macOS Julia Application Builder
+[![Build Status](https://travis-ci.org/NHDaly/ApplicationBuilder.jl.svg?branch=master)](https://travis-ci.org/NHDaly/ApplicationBuilder.jl)
 
 ## build_app.jl
 
