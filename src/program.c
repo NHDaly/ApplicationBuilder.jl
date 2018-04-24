@@ -47,6 +47,10 @@ int main(int argc, char *argv[])
     // https://github.com/JuliaLang/PackageCompiler.jl/issues/54
     jl_set_global(jl_base_module, jl_symbol("PROGRAM_FILE"), (jl_value_t*)jl_cstr_to_string(argv[0]));
 
+    // Pass the arguments to julia, so it can provide them as globals.
+    // This also initializes PROGRAM_FILE.
+    //jl_set_ARGS(argc, argv);
+
     // call the work function, and get back a value
     retcode = julia_main(ARGS);
     JL_GC_POP();

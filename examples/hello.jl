@@ -7,9 +7,9 @@ Base.@ccallable function julia_main(ARGS::Vector{String})::Cint
     tmpdir = mktempdir()
     filename = joinpath(tmpdir, "hello.html")
     open(filename, "w") do io
-        write(io, "Hello, World!\n")
-        write(io, "<br>    -- Love, $PROGRAM_FILE\n")
-        write(io, """<br><br>Current working directory: <a href="file://$(pwd())">$(pwd())</a>\n""")
+        println(io, "Hello, World!")
+        println(io, "<br>    -- Love, $PROGRAM_FILE")
+        println(io, """<br><br>Current working directory: <a href="file://$(pwd())">$(pwd())</a>""")
     end
     run(`open file://$filename`)
     return 0
