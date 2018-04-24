@@ -80,6 +80,10 @@ Base.@ccallable function julia_main(args::Vector{String})::Cint
     # resources we've copied into the Application bundle.
     ApplicationBuilder.change_dir_if_bundle()
 
+    # Apparently starting Electron too quickly means the OS doesn't get a
+    # chance to find the name of the application...
+    sleep(2)
+
     helloFromBlink()
     return 0
 end
