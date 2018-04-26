@@ -244,7 +244,7 @@ println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
 
 # Delete the tmp build files
 function delete_if_present(file, path)
-    files = glob(file,launcherDir)
+    files = glob(file, path)
     if !isempty(files) run(`rm -r $(files)`) end
 end
 delete_if_present("*.ji",launcherDir)
