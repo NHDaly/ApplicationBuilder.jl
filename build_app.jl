@@ -183,6 +183,13 @@ for binary_file in glob("*", launcherDir)
             run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
         end
     end
+    # Also need to strip any non-x86 architectures to make Apple happy.
+    # (It looks like this only affects libgcc_s.1.dylib.)
+    try
+        if success(pipeline(`file $binary_file`, `grep 'i386'`))
+            run_verbose(verbose, `lipo $binary_file -thin x86_64 -output $binary_file`)
+        end
+    end
 end
 
 # ---------- Create Info.plist to tell it where to find stuff! ---------
