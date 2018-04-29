@@ -1,5 +1,10 @@
 module ApplicationBuilder
 
+include("bundle.jl")
+@static if is_windows()
+    include("installer.jl")
+end
+
 if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
     function change_dir_if_bundle()
         full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
