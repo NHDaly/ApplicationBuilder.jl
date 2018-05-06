@@ -242,7 +242,7 @@ info_plist() = """
     	<key>LSMinimumSystemVersionByArchitecture</key>
     	<dict>
     		<key>x86_64</key>
-    		<string>10.6</string>
+    		<string>10.10</string>
     	</dict>
     	<key>LSRequiresCarbon</key>
     	<true/>
