@@ -130,7 +130,7 @@ function copy_file_dir_or_glob(pattern, dest)
     elseif isdir(pattern)
       run_verbose(verbose, `cp -rf $pattern $dest/`) # Copy the entire *dir* (not its contents) to dest.
     elseif pattern[1] == '/'
-        files = glob(pattern[2:end], "/")
+        files = glob(pattern[2:end], pattern[1:1])
         run_verbose(verbose, `cp -rf $files $dest/`) # Copy the specified glob pattern to dest.
     elseif !isempty(glob(pattern))
         run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
@@ -139,20 +139,25 @@ function copy_file_dir_or_glob(pattern, dest)
     end
 end
 
+function clean_file_pattern(pattern, errorMsg_fileCmd)
+    clean_pattern = strip(pattern)
+    if isempty(clean_pattern)
+        throw(ArgumentError("ERROR: $errorMsg_fileCmd '$pattern' must not be empty."))
+    elseif clean_pattern[1] == '~'
+        clean_pattern = homedir() * pattern[2:end]
+    end
+    return clean_pattern
+end
 println("  Resources:")
 for res in user_resources
-    if isempty(res)
-        throw(ArgumentError("ERROR: -R '$res' must not be empty."))
-    end
+    res = clean_file_pattern(res, "-R")
     print("    - $res ...")
     copy_file_dir_or_glob(res, resourcesDir)
     println("............ done")
 end
 println("  Libraries:")
 for lib in user_libs
-    if isempty(lib)
-        throw(ArgumentError("ERROR: -L '$lib' must not be empty."))
-    end
+    lib = clean_file_pattern(lib, "-L")
     print("    - $lib ...")
     copy_file_dir_or_glob(lib, libsDir)
     println("............ done")
