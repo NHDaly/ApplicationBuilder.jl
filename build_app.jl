@@ -135,7 +135,7 @@ function copy_file_dir_or_glob(pattern, dest)
     elseif !isempty(glob(pattern))
         run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
     else
-        println("WARNING: Skipping unknown file '$pattern'!")
+        warn("Skipping unknown file '$pattern'!")
     end
 end
 
@@ -256,9 +256,16 @@ verbose && println(info_plist())
 write("$appDir/Info.plist", info_plist());
 
 # Copy Julia icons
-julia_app_resources_dir() = joinpath(Base.JULIA_HOME, "../..")
-if (icns_file == nothing) icns_file = julia_app_resources_dir()*"/julia.icns" end
-cp(icns_file, "$resourcesDir/$APPNAME.icns", remove_destination=true);
+julia_app_resources_dir() = joinpath(Base.JULIA_HOME, "..","..")
+if (icns_file == nothing)
+    icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
+    verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
+end
+if isfile(icns_file)
+    cp(icns_file, "$resourcesDir/$APPNAME.icns", remove_destination=true);
+else
+    warn("Skipping nonexistent icons file: '$icns_file'")
+end
 
 # --------------- CLEAN UP before distributing ---------------
 println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
