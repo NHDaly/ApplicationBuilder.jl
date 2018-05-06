@@ -129,6 +129,9 @@ function copy_file_dir_or_glob(pattern, dest)
         run_verbose(verbose, `cp -f $pattern $dest/`) # Copy the file to dest
     elseif isdir(pattern)
       run_verbose(verbose, `cp -rf $pattern $dest/`) # Copy the entire *dir* (not its contents) to dest.
+    elseif pattern[1] == '/'
+        files = glob(pattern[2:end], "/")
+        run_verbose(verbose, `cp -rf $files $dest/`) # Copy the specified glob pattern to dest.
     elseif !isempty(glob(pattern))
         run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
     else
@@ -138,12 +141,18 @@ end
 
 println("  Resources:")
 for res in user_resources
+    if isempty(res)
+        throw(ArgumentError("ERROR: -R '$res' must not be empty."))
+    end
     print("    - $res ...")
     copy_file_dir_or_glob(res, resourcesDir)
     println("............ done")
 end
 println("  Libraries:")
 for lib in user_libs
+    if isempty(lib)
+        throw(ArgumentError("ERROR: -L '$lib' must not be empty."))
+    end
     print("    - $lib ...")
     copy_file_dir_or_glob(lib, libsDir)
     println("............ done")
