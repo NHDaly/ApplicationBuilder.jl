@@ -20,31 +20,30 @@ builddir = mktempdir()
 @test success(`$builddir/HelloWorld.app/Contents/MacOS/hello`)
 end
 
-# TODO: Blink doesn't work on Travis yet.
-#@testset "HelloBlink.app" begin
-#blinkPkg = Pkg.dir("Blink")
-#httpParserPkg = Pkg.dir("HttpParser")
-#mbedTLSPkg = Pkg.dir("MbedTLS")
-#
-#@test contains(readstring(`$julia $build_app_jl --verbose
-#            -R $(joinpath(blinkPkg, "deps/Julia.app"))
-#            -R $(joinpath(blinkPkg, "src/AtomShell/main.js"))
-#            -R $(joinpath(blinkPkg, "src/content/main.html"))
-#            -R $(joinpath(blinkPkg, "res"))
-#            -L $(joinpath(httpParserPkg, "deps/usr/lib/libhttp_parser.dylib"))
-#            -L $(joinpath(mbedTLSPkg, "deps/usr/lib/libmbedcrypto.2.7.1.dylib"))
-#            $examples_blink "HelloBlink" $builddir`),
-#    "Done building")
-#
-#@test isdir("$builddir/HelloBlink.app")
-#
-## Manually kill HelloBlink, since it waits for user input.
-#@async begin
-#    sleep(15) # wait til blink has started up
-#    run(`pkill blink`)
-#end
-#try # expect failure due to pkill, so not really much to test.
-#    run(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
-#end
-#
-#end
+@testset "HelloBlink.app" begin
+blinkPkg = Pkg.dir("Blink")
+httpParserPkg = Pkg.dir("HttpParser")
+mbedTLSPkg = Pkg.dir("MbedTLS")
+
+@test contains(readstring(`$julia $build_app_jl --verbose
+            -R $(joinpath(blinkPkg, "deps/Julia.app"))
+            -R $(joinpath(blinkPkg, "src/AtomShell/main.js"))
+            -R $(joinpath(blinkPkg, "src/content/main.html"))
+            -R $(joinpath(blinkPkg, "res"))
+            -L $(joinpath(httpParserPkg, "deps/usr/lib/libhttp_parser.dylib"))
+            -L $(joinpath(mbedTLSPkg, "deps/usr/lib/libmbedcrypto.2.7.1.dylib"))
+            $examples_blink "HelloBlink" $builddir`),
+    "Done building")
+
+@test isdir("$builddir/HelloBlink.app")
+
+# Manually kill HelloBlink, since it waits for user input.
+@async begin
+    sleep(15) # wait til blink has started up
+    run(`pkill blink`)
+end
+try # expect failure due to pkill, so not really much to test.
+    run(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
+end
+
+end
