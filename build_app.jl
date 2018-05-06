@@ -16,7 +16,7 @@ s = ArgParseSettings()
     "builddir"
         arg_type = String
         default = "builddir"
-        help = "directory used for building, either absolute or relative to the Julia program directory"
+        help = "build directory for output."
     "--verbose", "-v"
         action = :store_true
         help = "increase verbosity"
@@ -83,7 +83,7 @@ APPNAME=parsed_args["appname"]
 
 jl_main_file = parsed_args["juliaprog_main"]
 binary_name = match(r"([^/.]+)\.jl$", jl_main_file).captures[1]
-builddir = parsed_args["builddir"]
+builddir = abspath(parsed_args["builddir"])
 bundle_identifier = parsed_args["bundle_identifier"]
 if bundle_identifier == nothing
     bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$APPNAME"), r"\s", "")
@@ -105,9 +105,9 @@ if contains(bundle_identifier, r"\s") throw(ArgumentError("Bundle identifier mus
 if contains(bundle_identifier, r"[^A-Za-z0-9-.]") throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
 
 # ----------- Initialize App ---------------------
-println("~~~~~~ Creating mac app in \"$(pwd())/$builddir/$APPNAME.app\" ~~~~~~~")
+println("~~~~~~ Creating mac app in \"$builddir/$APPNAME.app\" ~~~~~~~")
 
-appDir="$(pwd())/$builddir/$APPNAME.app/Contents"
+appDir="$builddir/$APPNAME.app/Contents"
 
 launcherDir="$appDir/MacOS"
 resourcesDir="$appDir/Resources"
