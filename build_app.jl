@@ -1,4 +1,5 @@
 using Glob, ArgParse
+using PackageCompiler
 
 include("sign_mac_app.jl")
 
@@ -167,18 +168,18 @@ end
 # Compile the binary right into the app.
 println("~~~~~~ Compiling a binary from '$jl_main_file'... ~~~~~~~")
 
-# Provide an environment variable telling the code it's being compiled into a mac bundle.
-env = copy(ENV)
-env["LD_LIBRARY_PATH"]="$libsDir:$libsDir/julia"
-env["COMPILING_APPLE_BUNDLE"]="true"
-# Compile executable and copy julia libs to $launcherDir.
 custom_program_c = "$(Pkg.dir())/ApplicationBuilder/src/program.c"
-juliac_cmd = `julia $(Pkg.dir())/PackageCompiler/juliac.jl -aej -Cx86-64
-                --cc-flags='-mmacosx-version-min=10.10' $jl_main_file $custom_program_c
-                $launcherDir`
-verbose && println("  $juliac_cmd")
-verbose && insert!(juliac_cmd.exec, 3, "-v")
-run(setenv(juliac_cmd, env))
+# Provide an environment variable telling the code it's being compiled into a mac bundle.
+withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
+        "COMPILING_APPLE_BUNDLE"=>"true") do
+    verbose && println("  PackageCompiler.static_julia(...)")
+    # Compile executable and copy julia libs to $launcherDir.
+    PackageCompiler.static_julia(jl_main_file;
+            cprog=custom_program_c, builddir=launcherDir, verbose=verbose,
+            autodeps=true, executable=true, julialibs=true, optimize="3",
+            debug="0", cpu_target="x86-64",
+            cc_flags="-mmacosx-version-min=10.10")
+end
 
 for b in ["$launcherDir/$binary_name", "$launcherDir/$binary_name.dylib"]
     run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Frameworks/" $b`)
