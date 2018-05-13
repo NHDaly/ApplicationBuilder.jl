@@ -13,7 +13,7 @@ s = ArgParseSettings()
     "appname"
         arg_type = String
         default = nothing
-        help = "name to call the generated .app bundle"
+        help = "name to call the generated .app bundle; defaults to basename(juliaprog_main)"
     "builddir"
         arg_type = String
         default = "builddir"
@@ -80,10 +80,12 @@ s.epilog = """
 
 parsed_args = parse_args(ARGS, s)
 
-APPNAME=parsed_args["appname"]
-
 jl_main_file = parsed_args["juliaprog_main"]
 binary_name = match(r"([^/.]+)\.jl$", jl_main_file).captures[1]
+
+APPNAME=parsed_args["appname"]
+APPNAME == nothing && (APPNAME = binary_name)
+
 builddir = abspath(parsed_args["builddir"])
 bundle_identifier = parsed_args["bundle_identifier"]
 if bundle_identifier == nothing
