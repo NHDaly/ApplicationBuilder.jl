@@ -10,40 +10,29 @@ builddir = mktempdir()
 
 @testset "HelloWorld.app" begin
 # Test the build_app.jl script.
-# `@test contains(readstring(cmd), "Done building")` tests that the command
-# runs, and that gets all the way to the end. This is prefereable to
-# `@test success(cmd)`, because `success` suppresses the cmd's output, so we
-# can't see where the test is failing.
-@test contains(readstring(`$julia $build_app_jl --verbose $examples_hello "HelloWorld" $builddir`),
-               "Done building")
+ARGS = Base.shell_split("""--verbose $examples_hello "HelloWorld" $builddir""")
+@test 0 == include("../build_app.jl")
 @test isdir("$builddir/HelloWorld.app")
-@test success(`$builddir/HelloWorld.app/Contents/MacOS/hello`)
+@test isfile("$builddir/HelloWorld.app/Contents/MacOS/hello")
 end
 
 @testset "HelloBlink.app" begin
+# Test the build_app.jl script with complex args.
 blinkPkg = Pkg.dir("Blink")
 httpParserPkg = Pkg.dir("HttpParser")
 mbedTLSPkg = Pkg.dir("MbedTLS")
 
-@test contains(readstring(`$julia $build_app_jl --verbose
+ARGS = Base.shell_split("""--verbose
             -R $(joinpath(blinkPkg, "deps/Julia.app"))
             -R $(joinpath(blinkPkg, "src/AtomShell/main.js"))
             -R $(joinpath(blinkPkg, "src/content/main.html"))
             -R $(joinpath(blinkPkg, "res"))
             -L $(joinpath(httpParserPkg, "deps/usr/lib/libhttp_parser.dylib"))
             -L $(joinpath(mbedTLSPkg, "deps/usr/lib/libmbedcrypto.2.7.1.dylib"))
-            $examples_blink "HelloBlink" $builddir`),
-    "Done building")
+            $examples_blink "HelloBlink" $builddir""")
+@test 0 == include("../build_app.jl")
 
 @test isdir("$builddir/HelloBlink.app")
-
-# Manually kill HelloBlink, since it waits for user input.
-@async begin
-    sleep(15) # wait til blink has started up
-    run(`pkill blink`)
-end
-try # expect failure due to pkill, so not really much to test.
-    run(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
-end
+@test isfile("$builddir/HelloBlink.app/Contents/MacOS/blink")
 
 end

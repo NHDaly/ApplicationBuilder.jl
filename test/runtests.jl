@@ -4,5 +4,5 @@ using Base.Test
     Base.invokelatest(include, "ApplicationBuilder.jl")
 end
 @testset "Compiling examples/*.jl" begin
-    include("examples.jl")
+    include("build_app-cli.jl")
 end
