@@ -1,6 +1,4 @@
-using ArgParse, ApplicationBuilder
-
-include("sign_mac_app.jl")
+using ArgParse, ApplicationBuilder; using BuildApp
 
 s = ArgParseSettings()
 
@@ -79,4 +77,4 @@ s.epilog = """
 
 parsed_args = parse_args(ARGS, s)
 
-ApplicationBuilder.build_app_bundle(parsed_args)
+BuildApp.build_app_bundle(parsed_args)
