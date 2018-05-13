@@ -33,8 +33,8 @@ module App
                 # Can find the code's path from what the full_binary_name ends in.
                 m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
                 if m != nothing
-                    resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
-                    cd(resources_dir)
+                    bundle_root = dirname(dirname(full_binary_name))
+                    cd(bundle_root)
                 end
                 println("change_dir_if_bundle(): Changed to new pwd: $(pwd())")
                 return pwd()
