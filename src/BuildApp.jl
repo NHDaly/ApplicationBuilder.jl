@@ -4,38 +4,31 @@ using Glob, PackageCompiler
 
 include("sign_mac_app.jl")
 
-function build_app_bundle(parsed_args)
-    jl_main_file = parsed_args["juliaprog_main"]
-    binary_name = match(r"([^/.]+)\.jl$", jl_main_file).captures[1]
+function build_app_bundle(juliaprog_main;
+        appname=splitext(basename(juliaprog_main))[1], builddir = "builddir",
+        resources = String[], libraries = String[], verbose = false,
+        bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
+        certificate = nothing, entitlements_file = nothing,
+    )
 
-    APPNAME=parsed_args["appname"]
-    APPNAME == nothing && (APPNAME = binary_name)
-
-    builddir = abspath(parsed_args["builddir"])
-    bundle_identifier = parsed_args["bundle_identifier"]
+    builddir = abspath(builddir)
     if bundle_identifier == nothing
-        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$APPNAME"), r"\s", "")
-        println("  Calculated bundle_identifier: '$bundle_identifier'")
+        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s", "")
+        println("  Using calculated bundle_identifier: '$bundle_identifier'")
     end
-    app_version = parsed_args["app_version"]
-    icns_file = parsed_args["icns"]
-    user_resources = parsed_args["resource"]
-    user_libs = parsed_args["lib"]        # Contents will be copied to Libraries/
-    verbose = parsed_args["verbose"]
-    certificate = parsed_args["certificate"]
-    entitlements_file = parsed_args["entitlements"]
+    binary_name = splitext(basename(juliaprog_main))[1]
 
     # ----------- Input sanity checking --------------
 
-    if !isfile(jl_main_file) throw(ArgumentError("Cannot build application. No such file '$jl_main_file'")) end
+    if !isfile(juliaprog_main) throw(ArgumentError("Cannot build application. No such file '$juliaprog_main'")) end
     # Bundle identifier requirements: https://apple.stackexchange.com/a/238381/52530
     if contains(bundle_identifier, r"\s") throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
     if contains(bundle_identifier, r"[^A-Za-z0-9-.]") throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
 
     # ----------- Initialize App ---------------------
-    println("~~~~~~ Creating mac app in \"$builddir/$APPNAME.app\" ~~~~~~~")
+    println("~~~~~~ Creating mac app in \"$builddir/$appname.app\" ~~~~~~~")
 
-    appDir="$builddir/$APPNAME.app/Contents"
+    appDir="$builddir/$appname.app/Contents"
 
     launcherDir="$appDir/MacOS"
     resourcesDir="$appDir/Resources"
@@ -77,14 +70,14 @@ function build_app_bundle(parsed_args)
         return clean_pattern
     end
     println("  Resources:")
-    for res in user_resources
+    for res in resources
         res = clean_file_pattern(res, "-R")
         print("    - $res ...")
         copy_file_dir_or_glob(res, resourcesDir)
         println("............ done")
     end
     println("  Libraries:")
-    for lib in user_libs
+    for lib in libraries
         lib = clean_file_pattern(lib, "-L")
         print("    - $lib ...")
         copy_file_dir_or_glob(lib, libsDir)
@@ -93,7 +86,7 @@ function build_app_bundle(parsed_args)
 
     # ----------- Compile a binary ---------------------
     # Compile the binary right into the app.
-    println("~~~~~~ Compiling a binary from '$jl_main_file'... ~~~~~~~")
+    println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
     custom_program_c = "$(Pkg.dir())/ApplicationBuilder/src/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
@@ -101,7 +94,7 @@ function build_app_bundle(parsed_args)
             "COMPILING_APPLE_BUNDLE"=>"true") do
         verbose && println("  PackageCompiler.static_julia(...)")
         # Compile executable and copy julia libs to $launcherDir.
-        PackageCompiler.static_julia(jl_main_file;
+        PackageCompiler.static_julia(juliaprog_main;
                 cprog=custom_program_c, builddir=launcherDir, verbose=verbose,
                 autodeps=true, executable=true, julialibs=true, optimize="3",
                 debug="0", cpu_target="x86-64",
@@ -135,7 +128,7 @@ function build_app_bundle(parsed_args)
     end
 
     # ---------- Create Info.plist to tell it where to find stuff! ---------
-    # This lets you have a different app name from your jl_main_file.
+    # This lets you have a different app name from your juliaprog_main.
     println("~~~~~~ Generating 'Info.plist' for '$bundle_identifier'... ~~~~~~~")
 
     info_plist() = """
@@ -148,17 +141,17 @@ function build_app_bundle(parsed_args)
         	<key>CFBundleDevelopmentRegion</key>
         	<string>en</string>
         	<key>CFBundleDisplayName</key>
-        	<string>$APPNAME</string>
+        	<string>$appname</string>
         	<key>CFBundleExecutable</key>
         	<string>$binary_name</string>
         	<key>CFBundleIconFile</key>
-        	<string>$APPNAME.icns</string>
+        	<string>$appname.icns</string>
         	<key>CFBundleIdentifier</key>
         	<string>$bundle_identifier</string>
             <key>CFBundleInfoDictionaryVersion</key>
             <string>6.0</string>
         	<key>CFBundleName</key>
-        	<string>$APPNAME</string>
+        	<string>$appname</string>
         	<key>CFBundlePackageType</key>
         	<string>APPL</string>
         	<key>CFBundleShortVersionString</key>
@@ -190,7 +183,7 @@ function build_app_bundle(parsed_args)
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
     end
     if isfile(icns_file)
-        cp(icns_file, "$resourcesDir/$APPNAME.icns", remove_destination=true);
+        cp(icns_file, "$resourcesDir/$appname.icns", remove_destination=true);
     else
         warn("Skipping nonexistent icons file: '$icns_file'")
     end
@@ -221,7 +214,7 @@ function build_app_bundle(parsed_args)
         end
     end
 
-    println("~~~~~~ Done building '$builddir/$APPNAME.app'! ~~~~~~~")
+    println("~~~~~~ Done building '$builddir/$appname.app'! ~~~~~~~")
 end
 
 end # module

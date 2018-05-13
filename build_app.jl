@@ -1,6 +1,6 @@
 using ArgParse, ApplicationBuilder; using BuildApp
 
-s = ArgParseSettings()
+s = ArgParseSettings(autofix_names = true)  # turn "-" into "_" for arg names.
 
 @add_arg_table s begin
     "juliaprog_main"
@@ -21,7 +21,8 @@ s = ArgParseSettings()
     "--resource", "-R"
         arg_type = String
         action = :append_arg  # Can specify multiple
-        default = nothing
+        dest_name = "resources"  # each -R appends to resources.
+        default = String[]
         metavar = "<resource>"
         help = """specify files or directories to be copied to
                   MyApp.app/Contents/Resources/. This should be done for all
@@ -34,7 +35,8 @@ s = ArgParseSettings()
     "--lib", "-L"
         arg_type = String
         action = :append_arg  # Can specify multiple
-        default = nothing
+        dest_name = "libraries"  # each -L appends to libraries.
+        default = String[]
         metavar = "<file>"
         help = """specify user library files to be copied to
                   MyApp.app/Contents/Libraries/. This should be done for all
@@ -75,6 +77,13 @@ s.epilog = """
     \ua0\ua0 build.jl -R imgs -R mus.wav -L lib/* main.jl MyGame
     """
 
-parsed_args = parse_args(ARGS, s)
+parsed_args = parse_args(ARGS, s; as_symbols=true)
 
-BuildApp.build_app_bundle(parsed_args)
+juliaprog_main = pop!(parsed_args, :juliaprog_main)
+if PackageCompiler.julia_v07
+    filter!(kv -> kv.second ∉ (nothing, false), parsed_args)
+else
+    filter!((k, v) -> v ∉ (nothing, false), parsed_args)
+end
+
+BuildApp.build_app_bundle(juliaprog_main; parsed_args...)
