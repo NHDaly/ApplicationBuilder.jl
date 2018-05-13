@@ -2,37 +2,29 @@ using Base.Test
 
 julia = Base.julia_cmd().exec[1]
 build_app_jl = joinpath(@__DIR__, "..", "build_app.jl")
-examples_blink = joinpath(@__DIR__, "..", "examples", "blink.jl")
 examples_hello = joinpath(@__DIR__, "..", "examples", "hello.jl")
 
 builddir = mktempdir()
 @assert isdir(builddir)
 
-@testset "HelloWorld.app" begin
-# Test the build_app.jl script.
-ARGS = Base.shell_split("""--verbose $examples_hello "HelloWorld" $builddir""")
-@test 0 == include("../build_app.jl")
+@testset "Basic file resource args" begin
+# Test the build_app.jl script CLI args.
+res1 = @__FILE__ # haha copy this file itself as a "resource"!
+res2 = joinpath(@__DIR__, "runtests.jl") # lol sure this is a resource, why not.
+NEWARGS = Base.shell_split("""--verbose
+        -R $res1 --resource $res2 -L $res1 --lib $res2
+        $examples_hello "HelloWorld" $builddir""")
+eval(:(ARGS = $NEWARGS))
+@test 0 == include("$build_app_jl")
 @test isdir("$builddir/HelloWorld.app")
 @test isfile("$builddir/HelloWorld.app/Contents/MacOS/hello")
+
+# Make sure the specified resources and libs were copied:
+@test isfile("$builddir/HelloWorld.app/Contents/Resources/$(basename(res1))")
+@test isfile("$builddir/HelloWorld.app/Contents/Resources/$(basename(res2))")
+@test isfile("$builddir/HelloWorld.app/Contents/Libraries/$(basename(res1))")
 end
 
-@testset "HelloBlink.app" begin
-# Test the build_app.jl script with complex args.
-blinkPkg = Pkg.dir("Blink")
-httpParserPkg = Pkg.dir("HttpParser")
-mbedTLSPkg = Pkg.dir("MbedTLS")
-
-ARGS = Base.shell_split("""--verbose
-            -R $(joinpath(blinkPkg, "deps/Julia.app"))
-            -R $(joinpath(blinkPkg, "src/AtomShell/main.js"))
-            -R $(joinpath(blinkPkg, "src/content/main.html"))
-            -R $(joinpath(blinkPkg, "res"))
-            -L $(joinpath(httpParserPkg, "deps/usr/lib/libhttp_parser.dylib"))
-            -L $(joinpath(mbedTLSPkg, "deps/usr/lib/libmbedcrypto.2.7.1.dylib"))
-            $examples_blink "HelloBlink" $builddir""")
-@test 0 == include("../build_app.jl")
-
-@test isdir("$builddir/HelloBlink.app")
-@test isfile("$builddir/HelloBlink.app/Contents/MacOS/blink")
-
+@testset "Exits without juliaprog_main" begin
+  @test !success(`$julia $build_app_jl --verbose`)  # no main.jl
 end
