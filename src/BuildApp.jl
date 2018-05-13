@@ -215,6 +215,7 @@ function build_app_bundle(juliaprog_main;
     end
 
     println("~~~~~~ Done building '$builddir/$appname.app'! ~~~~~~~")
+    return 0
 end
 
 end # module
