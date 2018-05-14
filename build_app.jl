@@ -42,7 +42,7 @@ s = ArgParseSettings(autofix_names = true)  # turn "-" into "_" for arg names.
                   MyApp.app/Contents/Libraries/. This should be done for all
                   libraries that your app will need to reference at
                   runtime. Can be repeated."""
-    "--bundle_identifier"
+    "--bundle-identifier"
         arg_type = String
         default = nothing
         metavar = "com.user.appname"
@@ -53,7 +53,7 @@ s = ArgParseSettings(autofix_names = true)  # turn "-" into "_" for arg names.
         dest_name = "icns_file"
         metavar = "<file>"
         help = ".icns file to be used as the app's icon"
-    "--app_version"
+    "--app-version"
         arg_type = String
         default = "0.1"
         #range_tester = (x -> r"^[0-9]+(\.[0-9]+)*$"(x))  # can the version have other characters in it? idk..
