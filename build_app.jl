@@ -50,6 +50,7 @@ s = ArgParseSettings(autofix_names = true)  # turn "-" into "_" for arg names.
     "--icns"
         arg_type = String
         default = nothing
+        dest_name = "icns_file"
         metavar = "<file>"
         help = ".icns file to be used as the app's icon"
     "--app_version"
