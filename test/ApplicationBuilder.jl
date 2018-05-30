@@ -8,7 +8,7 @@ withenv(()->(include(joinpath("..","src","ApplicationBuilder.jl"))),
 sleep(1)  # wait for reload to kick in
 cwd = pwd()
 #  (must use `invokelatest` after `reload` to fix world-age problem.)
-@test cwd == Base.invokelatest(ApplicationBuilder.change_dir_if_bundle)
+@test cwd == Base.invokelatest(ApplicationBuilder.App.change_dir_if_bundle)
 @test cwd == pwd()  # didn't change
 end
 
@@ -27,7 +27,7 @@ withenv(()->(include(joinpath("..","src","ApplicationBuilder.jl"))),
 cwd = pwd()
 #  (must use `invokelatest` after `reload` to fix world-age problem.)
 # TODO: except that doesn't work... why doesn't it find the latest function?
-@test_broken cwd != Base.invokelatest(ApplicationBuilder.change_dir_if_bundle)
+@test_broken cwd != Base.invokelatest(ApplicationBuilder.App.change_dir_if_bundle)
 @test_broken Base.Filesystem.samefile(tmpAppResources, pwd())
 
 # Teardown (reset working directory)

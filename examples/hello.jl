@@ -2,7 +2,7 @@ using ApplicationBuilder
 
 # Create a temporary .html file, and open it to share the greetings.
 Base.@ccallable function julia_main(ARGS::Vector{String})::Cint
-    ApplicationBuilder.change_dir_if_bundle()
+    ApplicationBuilder.App.change_dir_if_bundle()
 
     tmpdir = mktempdir()
     filename = joinpath(tmpdir, "hello.html")

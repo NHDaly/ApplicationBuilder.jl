@@ -9,3 +9,5 @@ Session.vim
 # Build outputs
 builddir
 
+# Julia
+*.cov
