@@ -1,9 +1,10 @@
 module ApplicationBuilder
 
-include("bundle.jl")
 @static if is_windows()
     include("installer.jl")
 end
+
+export build_app_bundle
 
 # This package provides two separate modules, one for building applications, and
 # one that provides utilities for the julia code to support being built as an
@@ -52,6 +53,18 @@ module App
         end
     end
 end
+
+@static if is_linux()
+	
+	function change_dir_if_bundle()
+		binary_path = split(string(Base.julia_cmd()), ' ')[1][2:end]
+		newpath = dirname(dirname(binary_path))
+		cd(newpath)
+		println("New pwd = $(pwd())")
+	end
+	
+end
+
 
 end # module
 

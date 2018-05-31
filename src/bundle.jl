@@ -1,4 +1,4 @@
-function bundle(script::String; 
+function build_app_bundle(script::String; 
 				resources = String[],
 				libraries = String[],
 				builddir = "builddir",
@@ -7,9 +7,10 @@ function bundle(script::String;
 
 
 	# Create build directory
+	script = abspath(script)
 	base_path = dirname(script)
 	builddir = joinpath(base_path, builddir, appname)
-	println("Building at path $builddir")
+	info("Building at path $builddir")
 	mkpath(builddir)
 
 	core_path = joinpath(builddir, "core")
@@ -23,12 +24,18 @@ function bundle(script::String;
 
 	delim = is_windows() ? '\\' : '/'
 
+	info("Copying resources:")
 	for res in resources
+		print("Copying $res...")
 		cp(res, joinpath(res_path, split(res, delim)[end]), remove_destination = true)
+		println("... done.")
 	end
 
+	info("Copying libraries")
 	for lib in libraries
+		print("Copying $lib...")
 		cp(lib, joinpath(lib_path, split(lib, delim)[end]), remove_destination = true)
+		println("... done.")
 	end
 
 	build_executable(script, builddir = core_path)

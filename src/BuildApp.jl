@@ -2,6 +2,8 @@ module BuildApp
 
 using Glob, PackageCompiler
 
+@static if is_apple()
+
 include("sign_mac_app.jl")
 
 function build_app_bundle(juliaprog_main;
@@ -216,6 +218,11 @@ function build_app_bundle(juliaprog_main;
 
     println("~~~~~~ Done building '$builddir/$appname.app'! ~~~~~~~")
     return 0
+end
+end
+
+@static if is_linux()
+	include("bundle.jl")
 end
 
 end # module
