@@ -12,6 +12,9 @@ builddir = mktempdir()
                              verbose=true, appname="HelloWorld", builddir=builddir)
 @test isdir("$builddir/HelloWorld.app")
 @test success(`$builddir/HelloWorld.app/Contents/MacOS/hello`)
+
+# There shouldn't be a Libraries dir since none specified.
+@test !isdir("$builddir/HelloBlink.app/Contents/Libraries")
 end
 
 @testset "HelloBlink.app" begin
@@ -30,6 +33,9 @@ mbedTLSPkg = Pkg.dir("MbedTLS")
     appname="HelloBlink", builddir=builddir)
 
 @test isdir("$builddir/HelloBlink.app")
+# Test that it copied the correct files
+@test isdir("$builddir/HelloBlink.app/Contents/Libraries")
+@test isfile("$builddir/HelloBlink.app/Contents/Resources/main.js")
 
 # Manually kill HelloBlink, since it waits for user input.
 @async begin

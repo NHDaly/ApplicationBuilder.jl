@@ -35,53 +35,62 @@ function build_app_bundle(juliaprog_main;
     libsDir="$appDir/Libraries"
 
     mkpath(launcherDir)
-    mkpath(resourcesDir)
-    mkpath(libsDir)
+
+    function has_files(files)
+        return !isempty(files) && !all(isempty, [strip(f) for f in files])
+    end
+
+    mkpath(resourcesDir)  # Always create resources directory (For .icns file)
+    has_files(libraries) && mkpath(libsDir)
+
 
     # ----------- Copy user libs & assets -------------
-    println("~~~~~~ Copying user-specified libraries & resources to bundle... ~~~~~~~")
-    # Copy assets and libs early so they're available during compilation.
-    #  This is mostly relevant if you have .dylibs in your assets, which the compiler needs to look at.
-
     run_verbose(verbose, cmd) = (verbose && println("    julia> run($cmd)") ; run(cmd))
 
-    function copy_file_dir_or_glob(pattern, dest)
-        if isfile(pattern)
-            run_verbose(verbose, `cp -f $pattern $dest/`) # Copy the file to dest
-        elseif isdir(pattern)
-          run_verbose(verbose, `cp -rf $pattern $dest/`) # Copy the entire *dir* (not its contents) to dest.
-        elseif pattern[1] == '/'
-            files = glob(pattern[2:end], pattern[1:1])
-            run_verbose(verbose, `cp -rf $files $dest/`) # Copy the specified glob pattern to dest.
-        elseif !isempty(glob(pattern))
-            run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
-        else
-            warn("Skipping unknown file '$pattern'!")
-        end
-    end
+    if has_files(libraries) || has_files(resources)
+        # Copy assets and libs early so they're available during compilation.
+        #  This is mostly relevant if you have .dylibs in your assets, which the compiler needs to look at.
 
-    function clean_file_pattern(pattern, errorMsg_fileCmd)
-        clean_pattern = strip(pattern)
-        if isempty(clean_pattern)
-            throw(ArgumentError("ERROR: $errorMsg_fileCmd '$pattern' must not be empty."))
-        elseif clean_pattern[1] == '~'
-            clean_pattern = homedir() * pattern[2:end]
+        println("~~~~~~ Copying user-specified libraries & resources to bundle... ~~~~~~~")
+
+        function copy_file_dir_or_glob(pattern, dest)
+            if isfile(pattern)
+                run_verbose(verbose, `cp -f $pattern $dest/`) # Copy the file to dest
+            elseif isdir(pattern)
+              run_verbose(verbose, `cp -rf $pattern $dest/`) # Copy the entire *dir* (not its contents) to dest.
+            elseif pattern[1] == '/'
+                files = glob(pattern[2:end], pattern[1:1])
+                run_verbose(verbose, `cp -rf $files $dest/`) # Copy the specified glob pattern to dest.
+            elseif !isempty(glob(pattern))
+                run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
+            else
+                warn("Skipping unknown file '$pattern'!")
+            end
         end
-        return clean_pattern
-    end
-    println("  Resources:")
-    for res in resources
-        res = clean_file_pattern(res, "-R")
-        print("    - $res ...")
-        copy_file_dir_or_glob(res, resourcesDir)
-        println("............ done")
-    end
-    println("  Libraries:")
-    for lib in libraries
-        lib = clean_file_pattern(lib, "-L")
-        print("    - $lib ...")
-        copy_file_dir_or_glob(lib, libsDir)
-        println("............ done")
+
+        function clean_file_pattern(pattern, errorMsg_fileCmd)
+            clean_pattern = strip(pattern)
+            if isempty(clean_pattern)
+                throw(ArgumentError("ERROR: $errorMsg_fileCmd '$pattern' must not be empty."))
+            elseif clean_pattern[1] == '~'
+                clean_pattern = homedir() * pattern[2:end]
+            end
+            return clean_pattern
+        end
+        println("  Resources:")
+        for res in resources
+            res = clean_file_pattern(res, "-R")
+            print("    - $res ...")
+            copy_file_dir_or_glob(res, resourcesDir)
+            println("............ done")
+        end
+        println("  Libraries:")
+        for lib in libraries
+            lib = clean_file_pattern(lib, "-L")
+            print("    - $lib ...")
+            copy_file_dir_or_glob(lib, libsDir)
+            println("............ done")
+        end
     end
 
     # ----------- Compile a binary ---------------------
