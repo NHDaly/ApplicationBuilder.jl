@@ -14,7 +14,14 @@ builddir = mktempdir()
 @test success(`$builddir/HelloWorld.app/Contents/MacOS/hello`)
 
 # There shouldn't be a Libraries dir since none specified.
-@test !isdir("$builddir/HelloBlink.app/Contents/Libraries")
+@test !isdir("$builddir/HelloWorld.app/Contents/Libraries")
+
+@testset "No external Dependencies" begin
+@test !success(pipeline(
+                `otool -l "$builddir/HelloWorld.app/Contents/MacOS/hello"`,
+                `grep 'julia'`,  # Get all julia deps
+                `grep -v '@rpath'`))  # make sure all are relative.
+end
 end
 
 @testset "HelloBlink.app" begin

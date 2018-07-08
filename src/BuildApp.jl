@@ -119,9 +119,10 @@ function build_app_bundle(juliaprog_main;
     for binary_file in glob("*", launcherDir)
         try
             #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
-            external_julia_deps = readlines(pipeline(`otool -l $binary_file`, `grep '/julia'`,
-                                                    `sed 's/\s*path//'`, # remove leading "  path"
-                                                    `sed 's/(.*)$//'`)) # remove trailing parens
+            external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
+                 `grep $(dirname(Base.JULIA_HOME))`,  # filter julia lib deps
+                 `sed 's/\s*path//'`, # remove leading "  path"
+                 `sed 's/(.*)$//'`)) # remove trailing parens
             for line in external_julia_deps
                 path = strip(line)
                 run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
