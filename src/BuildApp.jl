@@ -1,6 +1,7 @@
 module BuildApp
 
 using Glob, PackageCompiler
+using Compat  # For julia v0.6, v0.7, and v1.0
 
 export build_app_bundle
 
@@ -108,7 +109,7 @@ function build_app_bundle(juliaprog_main;
     # Compile the binary right into the app.
     println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
-    custom_program_c = "$(Pkg.dir())/ApplicationBuilder/src/program.c"
+    custom_program_c = "$(@__DIR__)/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
             "COMPILING_APPLE_BUNDLE"=>"true") do
@@ -198,7 +199,7 @@ function build_app_bundle(juliaprog_main;
     write("$appDir/Info.plist", info_plist());
 
     # Copy Julia icons
-    julia_app_resources_dir() = joinpath(Base.JULIA_HOME, "..","..")
+    julia_app_resources_dir() = joinpath(Compat.Sys.BINDIR, "..","..")
     if (icns_file == nothing)
         icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
