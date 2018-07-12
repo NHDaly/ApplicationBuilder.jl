@@ -16,6 +16,7 @@ builddir = mktempdir()
 # There shouldn't be a Libraries dir since none specified.
 @test !isdir("$builddir/HelloWorld.app/Contents/Libraries")
 
+# Ensure all dependencies on Julia libs are internal, so the app is portable.
 @testset "No external Dependencies" begin
 @test !success(pipeline(
                 `otool -l "$builddir/HelloWorld.app/Contents/MacOS/hello"`,
