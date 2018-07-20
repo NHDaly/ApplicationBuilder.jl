@@ -21,7 +21,7 @@ git:
 #    packages:
 #    - gfortran
 before_script: # homebrew for mac
-   - julia -e 'Pkg.add("Blink"); Pkg.build("Blink"); using Blink; Blink.AtomShell.install();'
+   - julia -e 'if (VERSION < v"0.7-") Pkg.add("Blink"); Pkg.build("Blink"); using Blink; Blink.AtomShell.install(); end'
 
 ## uncomment the following lines to override the default test script
 #script:
