@@ -1,5 +1,7 @@
 using ArgParse, ApplicationBuilder; using BuildApp
 
+const julia_v07 = VERSION > v"0.7-"
+
 s = ArgParseSettings(autofix_names = true)  # turn "-" into "_" for arg names.
 
 @add_arg_table s begin
@@ -81,7 +83,7 @@ s.epilog = """
 parsed_args = parse_args(ARGS, s; as_symbols=true)
 
 juliaprog_main = pop!(parsed_args, :juliaprog_main)
-if PackageCompiler.julia_v07
+if julia_v07
     filter!(kv -> kv.second ∉ (nothing, false), parsed_args)
 else
     filter!((k, v) -> v ∉ (nothing, false), parsed_args)
