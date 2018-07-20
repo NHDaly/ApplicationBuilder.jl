@@ -221,7 +221,7 @@ function build_app_bundle(juliaprog_main;
 end
 end
 
-@static if is_linux()
+@static if is_linux() || is_windows()
 	include("bundle.jl")
 end
 

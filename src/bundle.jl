@@ -40,6 +40,10 @@ function build_app_bundle(script::String;
 
 	build_executable(script, builddir = core_path)
 
-	create_installer && installer(builddir, name = appname)
+    (create_installer && is_linux()) && throw(error("Cannot create installer on Linux"))
+
+    if is_windows()
+        create_installer && installer(builddir, name = appname)
+    end
 
 end
