@@ -1,15 +1,11 @@
 using Base.Test
 using ApplicationBuilder; using BuildApp;
 
-examples_blink = joinpath(@__DIR__, "..", "examples", "blink.jl")
-examples_hello = joinpath(@__DIR__, "..", "examples", "hello.jl")
-
 builddir = mktempdir()
 @assert isdir(builddir)
 
 @testset "HelloWorld.app" begin
-@test 0 == BuildApp.build_app_bundle(examples_hello;
-                             verbose=true, appname="HelloWorld", builddir=builddir)
+@test 0 == include("build_examples/hello.jl")
 @test isdir("$builddir/HelloWorld.app")
 @test success(`$builddir/HelloWorld.app/Contents/MacOS/hello`)
 
@@ -25,33 +21,26 @@ builddir = mktempdir()
 end
 end
 
-@testset "HelloBlink.app" begin
-blinkPkg = Pkg.dir("Blink")
-httpParserPkg = Pkg.dir("HttpParser")
-mbedTLSPkg = Pkg.dir("MbedTLS")
 
-@test 0 == BuildApp.build_app_bundle(examples_blink;
-    verbose = true,
-    resources = [joinpath(blinkPkg, "deps","Julia.app"),
-                 joinpath(blinkPkg, "src","AtomShell","main.js"),
-                 joinpath(blinkPkg, "src","content","main.html"),
-                 joinpath(blinkPkg, "res")],
-    libraries = [joinpath(httpParserPkg, "deps","usr","lib","libhttp_parser.dylib"),
-                 joinpath(mbedTLSPkg, "deps","usr","lib","libmbedcrypto.2.dylib")],
-    appname="HelloBlink", builddir=builddir)
+function testRunAndKillProgramSucceeds(cmd)
+    out, _, p = readandwrite(cmd) # Make sure it runs correctly
+    sleep(1)
+    process_exited(p) && (println("Test Failed: failed to launch: \n", readstring(out)); return false)
+    sleep(10)
+    process_exited(p) && (println("Test Failed: Process died: \n", readstring(out)); return false)
+    # Manually kill program after it's been running for a bit.
+    kill(p); sleep(1)
+    process_exited(p) || (println("Test Failed: Process failed to exit: \n", readstring(out)); return false)
+    return true
+end
+
+@testset "HelloBlink.app" begin
+@test 0 == include("build_examples/blink.jl")
 
 @test isdir("$builddir/HelloBlink.app")
 # Test that it copied the correct files
 @test isdir("$builddir/HelloBlink.app/Contents/Libraries")
 @test isfile("$builddir/HelloBlink.app/Contents/Resources/main.js")
-
-# Manually kill HelloBlink, since it waits for user input.
-@async begin
-    sleep(15) # wait til blink has started up
-    run(`pkill blink`)
-end
-try # expect failure due to pkill, so not really much to test.
-    run(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
-end
-
+# Test that it runs correctly
+@test testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
 end
