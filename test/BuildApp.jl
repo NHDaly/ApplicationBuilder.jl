@@ -37,7 +37,7 @@ mbedTLSPkg = Pkg.dir("MbedTLS")
                  joinpath(blinkPkg, "src","content","main.html"),
                  joinpath(blinkPkg, "res")],
     libraries = [joinpath(httpParserPkg, "deps","usr","lib","libhttp_parser.dylib"),
-                 joinpath(mbedTLSPkg, "deps","usr","lib","libmbedcrypto.2.7.1.dylib")],
+                 joinpath(mbedTLSPkg, "deps","usr","lib","libmbedcrypto.2.dylib")],
     appname="HelloBlink", builddir=builddir)
 
 @test isdir("$builddir/HelloBlink.app")

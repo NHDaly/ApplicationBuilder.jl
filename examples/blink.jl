@@ -36,7 +36,7 @@ if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
     eval(Blink, :(empty!(__inits__)))
 
     eval(HttpParser, :(lib = "libhttp_parser.dylib"))
-    eval(MbedTLS, :(const libmbedcrypto = "libmbedcrypto.2.7.1.dylib"))
+    eval(MbedTLS, :(const libmbedcrypto = "libmbedcrypto.2.dylib"))
 
     println("Done changing dependencies.")
 end
