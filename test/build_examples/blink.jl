@@ -12,12 +12,16 @@ mbedTLSPkg = Pkg.dir("MbedTLS")
 
 @assert blinkPkg != nothing "Blink is not installed!"
 
+using Blink
+
 BuildApp.build_app_bundle(examples_blink;
     verbose = true,
     resources = [joinpath(blinkPkg, "deps","Julia.app"),
                  joinpath(blinkPkg, "src","AtomShell","main.js"),
                  joinpath(blinkPkg, "src","content","main.html"),
                  joinpath(blinkPkg, "res")],
-    libraries = [joinpath(httpParserPkg, "deps","usr","lib","libhttp_parser.dylib"),
-                 joinpath(mbedTLSPkg, "deps","usr","lib","libmbedcrypto.2.dylib")],
+    # Get the current library names directly from the packages that use them,
+    # which keeps this build script robust against lib version changes.
+    libraries = [HttpParser.lib,
+                 MbedTLS.libmbedcrypto],
     appname="HelloBlink", builddir=builddir)
