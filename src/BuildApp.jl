@@ -20,7 +20,7 @@ function build_app_bundle(juliaprog_main;
 
     builddir = abspath(builddir)
     if bundle_identifier == nothing
-        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s", "")
+        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s" => "")
         println("  Using calculated bundle_identifier: '$bundle_identifier'")
     end
     binary_name = splitext(basename(juliaprog_main))[1]
@@ -29,8 +29,8 @@ function build_app_bundle(juliaprog_main;
 
     if !isfile(juliaprog_main) throw(ArgumentError("Cannot build application. No such file '$juliaprog_main'")) end
     # Bundle identifier requirements: https://apple.stackexchange.com/a/238381/52530
-    if contains(bundle_identifier, r"\s") throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
-    if contains(bundle_identifier, r"[^A-Za-z0-9-.]") throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
+    if occursin(r"\s", bundle_identifier) throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
+    if occursin(r"[^A-Za-z0-9-.]", bundle_identifier) throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
 
     # ----------- Initialize App ---------------------
     println("~~~~~~ Creating mac app in \"$builddir/$appname.app\" ~~~~~~~")
@@ -139,14 +139,14 @@ function build_app_bundle(juliaprog_main;
                 path = strip(line)
                 run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
             end
-        end
+        catch end
         # Also need to strip any non-x86 architectures to make Apple happy.
         # (It looks like this only affects libgcc_s.1.dylib.)
         try
             if success(pipeline(`file $binary_file`, `grep 'i386'`))
                 run_verbose(verbose, `lipo $binary_file -thin x86_64 -output $binary_file`)
             end
-        end
+        catch end
     end
 
     # ---------- Create Info.plist to tell it where to find stuff! ---------
