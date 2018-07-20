@@ -15,9 +15,6 @@ JULIA_DEFINE_FAST_TLS()
 // Declare C prototype of a function defined in Julia
 extern int julia_main(jl_array_t*);
 
-// Declare C prototype of a function defined in Julia
-extern void set_program_file(jl_value_t*);
-
 // main function (windows UTF16 -> UTF8 argument conversion code copied from julia's ui/repl.c)
 int main(int argc, char *argv[])
 {
@@ -33,27 +30,23 @@ int main(int argc, char *argv[])
     jl_options.image_file = JULIAC_PROGRAM_LIBNAME;
     julia_init(JL_IMAGE_JULIA_HOME);
 
-    // build arguments array: `String[ unsafe_string(argv[i]) for i in 1:argc ]`
-    jl_array_t *ARGS = jl_alloc_array_1d(jl_apply_array_type(jl_string_type, 1), 0);
-    JL_GC_PUSH1(&ARGS);
+    // Initialize Core.ARGS with the full argv.
+    jl_set_ARGS(argc, argv);
+
+    // Set PROGRAM_FILE to argv[0].
+    jl_set_global(jl_base_module,
+        jl_symbol("PROGRAM_FILE"), (jl_value_t*)jl_cstr_to_string(argv[0]));
+
+    // Set Base.ARGS to `String[ unsafe_string(argv[i]) for i in 1:argc ]`
+    jl_array_t *ARGS = (jl_array_t*)jl_get_global(jl_base_module, jl_symbol("ARGS"));
     jl_array_grow_end(ARGS, argc - 1);
     for (i = 1; i < argc; i++) {
         jl_value_t *s = (jl_value_t*)jl_cstr_to_string(argv[i]);
         jl_arrayset(ARGS, s, i - 1);
     }
-    // Set PROGRAM_FILE manually, since it's not set in the default program
-    // provided at `~/.julia/v0.6/PackageCompiler/examples/program.c`.
-    // For more info, please see the following issue:
-    // https://github.com/JuliaLang/PackageCompiler.jl/issues/54
-    jl_set_global(jl_base_module, jl_symbol("PROGRAM_FILE"), (jl_value_t*)jl_cstr_to_string(argv[0]));
-
-    // Pass the arguments to julia, so it can provide them as globals.
-    // This also initializes PROGRAM_FILE.
-    //jl_set_ARGS(argc, argv);
 
     // call the work function, and get back a value
     retcode = julia_main(ARGS);
-    JL_GC_POP();
 
     // Cleanup and gracefully exit
     jl_atexit_hook(retcode);
