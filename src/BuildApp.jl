@@ -7,12 +7,14 @@ export build_app_bundle
 @static if is_apple()
 
 include("sign_mac_app.jl")
+include("mac_commandline_app.jl")
 
 function build_app_bundle(juliaprog_main;
         appname=splitext(basename(juliaprog_main))[1], builddir = "builddir",
         resources = String[], libraries = String[], verbose = false,
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
+        commandline_app = false,
     )
 
     builddir = abspath(builddir)
@@ -37,6 +39,11 @@ function build_app_bundle(juliaprog_main;
     launcherDir="$appDir/MacOS"
     resourcesDir="$appDir/Resources"
     libsDir="$appDir/Libraries"
+
+    if commandline_app
+        # Redefine launcherDir to put the binary where applet expects it.
+        launcherDir = build_commandline_app_bundle(builddir, binary_name, appname)
+    end
 
     mkpath(launcherDir)
 
@@ -157,7 +164,7 @@ function build_app_bundle(juliaprog_main;
         	<key>CFBundleDisplayName</key>
         	<string>$appname</string>
         	<key>CFBundleExecutable</key>
-        	<string>$binary_name</string>
+        	<string>$(commandline_app ? "applet" : binary_name)</string>
         	<key>CFBundleIconFile</key>
         	<string>$appname.icns</string>
         	<key>CFBundleIdentifier</key>
