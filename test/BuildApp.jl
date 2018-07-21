@@ -21,6 +21,11 @@ builddir = mktempdir()
 end
 end
 
+@testset "commandline_app" begin
+@test 0 == include("build_examples/commandline_hello.jl")
+@test success(`open $builddir/hello.app`)
+end
+
 
 function testRunAndKillProgramSucceeds(cmd)
     out, _, p = readandwrite(cmd) # Make sure it runs correctly
