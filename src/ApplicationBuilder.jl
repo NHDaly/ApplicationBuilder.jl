@@ -1,7 +1,5 @@
 module ApplicationBuilder
 
-export build_app_bundle
-
 # This package provides two separate modules, one for building applications, and
 # one that provides utilities for the julia code to support being built as an
 # application bundle. They are separated to isolate the application code from
@@ -51,14 +49,14 @@ module App
 end
 
 @static if is_linux() || is_windows()
-	
+
 	function change_dir_if_bundle()
 		binary_path = split(string(Base.julia_cmd()), ' ')[1][2:end]
 		newpath = dirname(dirname(binary_path))
 		cd(newpath)
 		println("New pwd = $(pwd())")
 	end
-	
+
 end
 
 @static if is_windows()

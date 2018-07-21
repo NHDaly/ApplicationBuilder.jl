@@ -2,6 +2,8 @@ module BuildApp
 
 using Glob, PackageCompiler
 
+export build_app_bundle
+
 @static if is_apple()
 
 include("sign_mac_app.jl")
