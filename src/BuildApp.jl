@@ -164,7 +164,7 @@ function build_app_bundle(juliaprog_main;
         	<key>CFBundleDisplayName</key>
         	<string>$appname</string>
         	<key>CFBundleExecutable</key>
-        	<string>$(commandline_app ? "applet" : binary_name)</string>
+        	<string>$binary_name</string>
         	<key>CFBundleIconFile</key>
         	<string>$appname.icns</string>
         	<key>CFBundleIdentifier</key>

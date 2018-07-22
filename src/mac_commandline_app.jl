@@ -17,6 +17,7 @@ function build_commandline_app_bundle(builddir, binary_name, appname)
 
     app_path = "$builddir/$appname.app"
     run(`osacompile -o $app_path $applescript_file`)
+    mv("$app_path/Contents/MacOS/applet", "$app_path/Contents/MacOS/$binary_name")
 
     return joinpath(app_path,exe_dir)
 end
