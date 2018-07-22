@@ -1,8 +1,11 @@
-function build_app_bundle(script::String; 
+if is_windows()
+	include("installer.jl")
+end
+function build_app_bundle(script::String;
 				resources = String[],
 				libraries = String[],
 				builddir = "builddir",
-				appname = "nothing", 
+				appname = "nothing",
 				create_installer = false)
 
 

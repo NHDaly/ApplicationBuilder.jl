@@ -51,7 +51,7 @@ end
 @static if is_linux() || is_windows()
 
 	function change_dir_if_bundle()
-		binary_path = split(string(Base.julia_cmd()), ' ')[1][2:end]
+ 		binary_path = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
 		newpath = dirname(dirname(binary_path))
 		cd(newpath)
 		println("New pwd = $(pwd())")
