@@ -23,7 +23,9 @@ by bundled applications before accessing any resources from the filesystem.
 """
 module App
 
-@static if is_apple()
+using Compat
+
+@static if Compat.Sys.isapple()
     if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
         function change_dir_if_bundle()
             full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c

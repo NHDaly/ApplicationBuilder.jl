@@ -1,6 +1,8 @@
 using Base.Test
 using ApplicationBuilder; using BuildApp;
 
+const julia_v07 = VERSION > v"0.7-"
+
 builddir = mktempdir()
 @assert isdir(builddir)
 
@@ -39,6 +41,7 @@ function testRunAndKillProgramSucceeds(cmd)
     return true
 end
 
+if !julia_v07  # Blink doesn't yet work on julia v0.7.
 @testset "HelloBlink.app" begin
 @test 0 == include("build_examples/blink.jl")
 
@@ -48,4 +51,5 @@ end
 @test isfile("$builddir/HelloBlink.app/Contents/Resources/main.js")
 # Test that it runs correctly
 @test testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
+end
 end

@@ -1,6 +1,7 @@
 module BuildApp
 
 using Glob, PackageCompiler
+using Compat  # For julia v0.6, v0.7, and v1.0
 
 export build_app_bundle
 
@@ -19,7 +20,7 @@ function build_app_bundle(juliaprog_main;
 
     builddir = abspath(builddir)
     if bundle_identifier == nothing
-        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s", "")
+        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s" => "")
         println("  Using calculated bundle_identifier: '$bundle_identifier'")
     end
     binary_name = splitext(basename(juliaprog_main))[1]
@@ -28,8 +29,8 @@ function build_app_bundle(juliaprog_main;
 
     if !isfile(juliaprog_main) throw(ArgumentError("Cannot build application. No such file '$juliaprog_main'")) end
     # Bundle identifier requirements: https://apple.stackexchange.com/a/238381/52530
-    if contains(bundle_identifier, r"\s") throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
-    if contains(bundle_identifier, r"[^A-Za-z0-9-.]") throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
+    if occursin(r"\s", bundle_identifier) throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
+    if occursin(r"[^A-Za-z0-9-.]", bundle_identifier) throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
 
     # ----------- Initialize App ---------------------
     println("~~~~~~ Creating mac app in \"$builddir/$appname.app\" ~~~~~~~")
@@ -108,7 +109,7 @@ function build_app_bundle(juliaprog_main;
     # Compile the binary right into the app.
     println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
-    custom_program_c = "$(Pkg.dir())/ApplicationBuilder/src/program.c"
+    custom_program_c = "$(@__DIR__)/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
             "COMPILING_APPLE_BUNDLE"=>"true") do
@@ -131,21 +132,21 @@ function build_app_bundle(juliaprog_main;
         try
             #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
             external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
-                 `grep $(dirname(Base.JULIA_HOME))`,  # filter julia lib deps
+                 `grep $(dirname(Compat.Sys.BINDIR))`,  # filter julia lib deps
                  `sed 's/\s*path//'`, # remove leading "  path"
                  `sed 's/(.*)$//'`)) # remove trailing parens
             for line in external_julia_deps
                 path = strip(line)
                 run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
             end
-        end
+        catch end
         # Also need to strip any non-x86 architectures to make Apple happy.
         # (It looks like this only affects libgcc_s.1.dylib.)
         try
             if success(pipeline(`file $binary_file`, `grep 'i386'`))
                 run_verbose(verbose, `lipo $binary_file -thin x86_64 -output $binary_file`)
             end
-        end
+        catch end
     end
 
     # ---------- Create Info.plist to tell it where to find stuff! ---------
@@ -198,7 +199,7 @@ function build_app_bundle(juliaprog_main;
     write("$appDir/Info.plist", info_plist());
 
     # Copy Julia icons
-    julia_app_resources_dir() = joinpath(Base.JULIA_HOME, "..","..")
+    julia_app_resources_dir() = joinpath(Compat.Sys.BINDIR, "..","..")
     if (icns_file == nothing)
         icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
