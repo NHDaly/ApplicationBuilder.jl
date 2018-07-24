@@ -1,4 +1,4 @@
-if is_windows()
+if Compat.Sys.iswindows()
 	include("installer.jl")
 end
 function build_app_bundle(script::String;
@@ -25,27 +25,27 @@ function build_app_bundle(script::String;
 	mkpath(lib_path)
 	mkpath(res_path)
 
-	delim = is_windows() ? '\\' : '/'
+	delim = Compat.Sys.iswindows() ? '\\' : '/'
 
 	info("Copying resources:")
 	for res in resources
 		print("Copying $res...")
-		cp(res, joinpath(res_path, split(res, delim)[end]), remove_destination = true)
+		cp(res, joinpath(res_path, split(res, delim)[end]), force = true)
 		println("... done.")
 	end
 
 	info("Copying libraries")
 	for lib in libraries
 		print("Copying $lib...")
-		cp(lib, joinpath(lib_path, split(lib, delim)[end]), remove_destination = true)
+		cp(lib, joinpath(lib_path, split(lib, delim)[end]), force = true)
 		println("... done.")
 	end
 
 	build_executable(script, builddir = core_path)
 
-    (create_installer && is_linux()) && throw(error("Cannot create installer on Linux"))
+    (create_installer && Compat.Sys.islinux()) && throw(error("Cannot create installer on Linux"))
 
-    if is_windows()
+    if Compat.Sys.iswindows()
         create_installer && installer(builddir, name = appname)
     end
 

@@ -29,7 +29,7 @@ using Compat
     if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
         function change_dir_if_bundle()
             full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
-            if is_apple()
+            if Compat.Sys.isapple()
                 # On Apple devices, if this is running inside a .app bundle, it starts
                 # us with pwd="/". Change dir to the Resources dir instead.
                 # Can find the code's path from what the full_binary_name ends in.
@@ -50,7 +50,7 @@ using Compat
     end
 end
 
-@static if is_linux() || is_windows()
+@static if Compat.Sys.islinux() || Compat.Sys.iswindows()
 
 	function change_dir_if_bundle()
  		binary_path = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
@@ -61,7 +61,7 @@ end
 
 end
 
-@static if is_windows()
+@static if Compat.Sys.iswindows()
     include("installer.jl")
 end
 

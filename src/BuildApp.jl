@@ -1,15 +1,31 @@
 module BuildApp
 
 using Glob, PackageCompiler
-using Compat  # For julia v0.6, v0.7, and v1.0
+using Compat
 
 export build_app_bundle
 
-@static if is_apple()
+@static if Compat.Sys.isapple()
 
 include("sign_mac_app.jl")
 include("mac_commandline_app.jl")
 
+"""
+    build_app_bundle(juliaprog_main;
+        appname, builddir, resources, libraries, verbose, bundle_identifier,
+        app_version, icns_file, certificate, entitlements_file, commandline_app)
+
+Compile `juliaprog_main` into an executable, and bundle it together with all its
+`resources` and `libraries` into an App called `appname`.
+
+juliaprog_main: Path to a ".jl" file that defines the function `julia_main()`
+
+# Examples
+```julia-repl
+julia> build_app_bundle("main.jl", appname="MyApp", resources=["img.jpg"],
+           libraries=[MyPackage._libp])
+```
+"""
 function build_app_bundle(juliaprog_main;
         appname=splitext(basename(juliaprog_main))[1], builddir = "builddir",
         resources = String[], libraries = String[], verbose = false,
@@ -20,7 +36,7 @@ function build_app_bundle(juliaprog_main;
 
     builddir = abspath(builddir)
     if bundle_identifier == nothing
-        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s" => "")
+        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s", "")
         println("  Using calculated bundle_identifier: '$bundle_identifier'")
     end
     binary_name = splitext(basename(juliaprog_main))[1]
@@ -109,7 +125,7 @@ function build_app_bundle(juliaprog_main;
     # Compile the binary right into the app.
     println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
-    custom_program_c = "$(@__DIR__)/program.c"
+    custom_program_c = "$(Pkg.dir())/ApplicationBuilder/src/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
             "COMPILING_APPLE_BUNDLE"=>"true") do
@@ -132,21 +148,21 @@ function build_app_bundle(juliaprog_main;
         try
             #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
             external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
-                 `grep $(dirname(Compat.Sys.BINDIR))`,  # filter julia lib deps
+                 `grep $(dirname(Base.JULIA_HOME))`,  # filter julia lib deps
                  `sed 's/\s*path//'`, # remove leading "  path"
                  `sed 's/(.*)$//'`)) # remove trailing parens
             for line in external_julia_deps
                 path = strip(line)
                 run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
             end
-        catch end
+        end
         # Also need to strip any non-x86 architectures to make Apple happy.
         # (It looks like this only affects libgcc_s.1.dylib.)
         try
             if success(pipeline(`file $binary_file`, `grep 'i386'`))
                 run_verbose(verbose, `lipo $binary_file -thin x86_64 -output $binary_file`)
             end
-        catch end
+        end
     end
 
     # ---------- Create Info.plist to tell it where to find stuff! ---------
@@ -199,13 +215,13 @@ function build_app_bundle(juliaprog_main;
     write("$appDir/Info.plist", info_plist());
 
     # Copy Julia icons
-    julia_app_resources_dir() = joinpath(Compat.Sys.BINDIR, "..","..")
+    julia_app_resources_dir() = joinpath(Base.JULIA_HOME, "..","..")
     if (icns_file == nothing)
         icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
     end
     if isfile(icns_file)
-        cp(icns_file, "$resourcesDir/$appname.icns", remove_destination=true);
+        cp(icns_file, "$resourcesDir/$appname.icns", force=true);
     else
         warn("Skipping nonexistent icons file: '$icns_file'")
     end
@@ -241,7 +257,7 @@ function build_app_bundle(juliaprog_main;
 end
 end
 
-@static if is_linux() || is_windows()
+@static if Compat.Sys.islinux() || Compat.Sys.iswindows()
 	include("bundle.jl")
 end
 
