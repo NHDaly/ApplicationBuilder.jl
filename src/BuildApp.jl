@@ -221,7 +221,7 @@ function build_app_bundle(juliaprog_main;
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
     end
     if isfile(icns_file)
-        cp(icns_file, "$resourcesDir/$appname.icns", force=true);
+        Compat.cp(icns_file, "$resourcesDir/$appname.icns", force=true);
     else
         warn("Skipping nonexistent icons file: '$icns_file'")
     end

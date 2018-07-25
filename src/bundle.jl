@@ -30,14 +30,14 @@ function build_app_bundle(script::String;
 	info("Copying resources:")
 	for res in resources
 		print("Copying $res...")
-		cp(res, joinpath(res_path, split(res, delim)[end]), force = true)
+		Compat.cp(res, joinpath(res_path, split(res, delim)[end]), force = true)
 		println("... done.")
 	end
 
 	info("Copying libraries")
 	for lib in libraries
 		print("Copying $lib...")
-		cp(lib, joinpath(lib_path, split(lib, delim)[end]), force = true)
+		Compat.cp(lib, joinpath(lib_path, split(lib, delim)[end]), force = true)
 		println("... done.")
 	end
 
