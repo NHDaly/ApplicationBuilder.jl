@@ -1,4 +1,4 @@
-using ArgParse, ApplicationBuilder; using BuildApp
+using ArgParse, ApplicationBuilder
 
 const julia_v07 = VERSION > v"0.7-"
 
@@ -89,4 +89,4 @@ else
     filter!((k, v) -> v ∉ (nothing, false), parsed_args)
 end
 
-BuildApp.build_app_bundle(juliaprog_main; parsed_args...)
+ApplicationBuilder.build_app_bundle(juliaprog_main; parsed_args...)

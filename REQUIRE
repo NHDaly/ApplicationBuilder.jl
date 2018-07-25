@@ -1,5 +1,6 @@
 julia 0.6
 PackageCompiler
+# https://github.com/NHDaly/ApplicationBuilderRuntimeUtils.jl (Not yet registered; must clone manually.)
 Glob
 ArgParse
 Compat

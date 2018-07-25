@@ -1,4 +1,4 @@
-using ApplicationBuilder; using BuildApp
+using ApplicationBuilder
 
 examples_blink = joinpath(@__DIR__, "..", "..", "examples", "blink.jl")
 
@@ -14,7 +14,7 @@ mbedTLSPkg = Pkg.dir("MbedTLS")
 
 using Blink
 
-BuildApp.build_app_bundle(examples_blink;
+ApplicationBuilder.build_app_bundle(examples_blink;
     verbose = true,
     resources = [joinpath(blinkPkg, "deps","Julia.app"),
                  joinpath(blinkPkg, "src","AtomShell","main.js"),

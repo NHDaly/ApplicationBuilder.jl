@@ -1,31 +1,71 @@
 using Base.Test
+using ApplicationBuilder
 
-# Test that change_dir_if_bundle actually changes behavior based on ENV variable
-# set up fake .App
-tmpdir = mktempdir()
-tmpAppResources = joinpath(tmpdir, "Tmp.app/Contents/Resources")
-tmpAppMacOS = joinpath(tmpdir, "Tmp.app/Contents/MacOS")
-tmpAppExe = joinpath(tmpdir, "Tmp.app/Contents/MacOS/tmp")
-mkpath(tmpAppMacOS)
-mkpath(tmpAppResources)
+const julia_v07 = VERSION > v"0.7-"
 
-# Set up test script. (Must be run as a separate process to allow the ENV
-# variable to generate different code at compile-time.)
-testScript = joinpath(tmpdir, "test.jl")
-write(testScript, """
-        # ApplicationBuilder expects to be inside an App structure.
-        eval(Base, :(PROGRAM_FILE = "$tmpAppExe"))
-        # change_dir_if_bundle() will be differently based on the ENV variable.
-        using ApplicationBuilder; ApplicationBuilder.App.change_dir_if_bundle(); println(pwd());
-    """)
+builddir = mktempdir()
+@assert isdir(builddir)
 
-# Without ENV variable set, it should do nothing.
-@test pwd() == readlines(`julia $testScript`)[end]
-# With the ENV variable false, it should do nothing.
-@test pwd() == withenv(()->(readlines(`julia $testScript`)[end]),
-             "COMPILING_APPLE_BUNDLE"=>"false")  # Code is not being compiled.
+@testset "make_bundle_identifier Utils" begin
+@test r"""^com.[a-z0-9]+.myappnamedthisapp22$"""(
+            ApplicationBuilder.make_bundle_identifier("My app named this_app22")
+      )
+end
 
-# With COMPILING_APPLE_BUNDLE == true, the dir should change since it thinks the
-# code is being compiled as an app.
-@test pwd() != withenv(()->(readlines(`julia $testScript`)[end]),
-             "COMPILING_APPLE_BUNDLE"=>"true")  # Code is not being compiled.
+@testset "HelloWorld.app" begin
+@test 0 == include("build_examples/hello.jl")
+@test isdir("$builddir/HelloWorld.app")
+@test success(`$builddir/HelloWorld.app/Contents/MacOS/hello`)
+
+# There shouldn't be a Libraries dir since none specified.
+@test !isdir("$builddir/HelloWorld.app/Contents/Libraries")
+
+# Ensure all dependencies on Julia libs are internal, so the app is portable.
+@testset "No external Dependencies" begin
+@test !success(pipeline(
+                `otool -l "$builddir/HelloWorld.app/Contents/MacOS/hello"`,
+                `grep 'julia'`,  # Get all julia deps
+                `grep -v '@rpath'`))  # make sure all are relative.
+end
+end
+
+@testset "commandline_app" begin
+@test 0 == include("build_examples/commandline_hello.jl")
+@test success(`open $builddir/hello.app`)
+end
+
+
+function testRunAndKillProgramSucceeds(cmd)
+    out, _, p = readandwrite(cmd) # Make sure it runs correctly
+    sleep(1)
+    process_exited(p) && (println("Test Failed: failed to launch: \n", readstring(out)); return false)
+    sleep(10)
+    process_exited(p) && (println("Test Failed: Process died: \n", readstring(out)); return false)
+    # Manually kill program after it's been running for a bit.
+    kill(p); sleep(1)
+    process_exited(p) || (println("Test Failed: Process failed to exit: \n", readstring(out)); return false)
+    return true
+end
+
+if !julia_v07  # Blink doesn't yet work on julia v0.7.
+@testset "HelloBlink.app" begin
+@test 0 == include("build_examples/blink.jl")
+
+@test isdir("$builddir/HelloBlink.app")
+# Test that it copied the correct files
+@test isdir("$builddir/HelloBlink.app/Contents/Libraries")
+@test isfile("$builddir/HelloBlink.app/Contents/Resources/main.js")
+# Test that it runs correctly
+@test testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
+
+# Test that it can run without .julia directory (Dangerous!)
+begin
+    mv(Pkg.dir(), Pkg.dir()*".bak")  # NOTE: MUST mv() THIS BACK
+    try
+        @test_broken testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
+    catch
+    end
+    mv(Pkg.dir()*".bak", Pkg.dir())  # NOTE: MUST RUN THIS LINE IF ABOVE IS RUN
+end
+end
+end

@@ -1,4 +1,4 @@
-using ApplicationBuilder; using BuildApp
+using ApplicationBuilder
 
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a provided builddir.

@@ -1,4 +1,4 @@
-using ApplicationBuilder; using BuildApp
+using ApplicationBuilder
 
 examples_blink = joinpath(@__DIR__, "..", "..", "examples", "sdl.jl")
 
@@ -49,7 +49,7 @@ cp_lib(joinpath(homebrew, "deps/usr/lib/libogg.dylib"))
 cp_lib(joinpath(homebrew, "deps/usr/lib/libpng16.dylib"))
 
 
-BuildApp.build_app_bundle(examples_blink;
+build_app_bundle(examples_blink;
     verbose = true,
     resources = [joinpath(sdlPkg,
                          "assets","fonts","FiraCode","ttf","FiraCode-Regular.ttf"),

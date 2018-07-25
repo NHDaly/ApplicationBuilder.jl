@@ -14,7 +14,7 @@
 #      examples/blink.jl "HelloBlink"
 
 using Blink
-using ApplicationBuilder
+using ApplicationBuilderRuntimeUtils
 
 # In order to distribute this Application, we've copied all its dependencies
 # into the .app bundle via the -R and -L build flags.
@@ -80,7 +80,7 @@ end
 Base.@ccallable function julia_main(args::Vector{String})::Cint
     # Note that we must call this function in order for Blink to find the
     # resources we've copied into the Application bundle.
-    ApplicationBuilder.App.change_dir_if_bundle()
+    ApplicationBuilderRuntimeUtils.change_dir_if_bundle()
 
     # Apparently starting Electron too quickly means the OS doesn't get a
     # chance to find the name of the application...

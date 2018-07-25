@@ -1,4 +1,4 @@
-using ApplicationBuilder; using BuildApp
+using ApplicationBuilder
 
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a provided builddir.
@@ -10,7 +10,7 @@ libUIPkg = Pkg.dir("Libui")
 
 using Libui
 
-BuildApp.build_app_bundle(joinpath(@__DIR__, "..", "..", "examples", "libui.jl");
+ApplicationBuilder.build_app_bundle(joinpath(@__DIR__, "..", "..", "examples", "libui.jl");
     verbose = true,
     resources = [],
     libraries = [ Libui.libui ],
