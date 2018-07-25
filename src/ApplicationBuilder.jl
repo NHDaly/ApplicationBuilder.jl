@@ -25,6 +25,21 @@ module App
 
 using Compat
 
+"""
+    change_dir_if_bundle()
+
+Change current working directory to the directory containing the App's
+resources.
+
+The behavior of this function depends on how it's called. If this code is called
+from within an Application compiled by ApplicationBuilder it will `cd` to the
+directory containing the App's resources. Otherwise, it will do nothing.
+
+Apps that access any files through relative paths should call this function in
+their `julia_main()`.
+ """
+function change_dir_if_bundle end
+
 @static if Compat.Sys.isapple()
     if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
         function change_dir_if_bundle()
