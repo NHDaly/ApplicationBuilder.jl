@@ -30,13 +30,12 @@ if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
                              "blink.js" => "res/blink.js",
                              "blink.css" => "res/blink.css",
                              "reset.css" => "res/reset.css")))
-    eval(Blink, :(const port = get(ENV, "BLINK_PORT", rand(2_000:10_000))))
     # Clear out Blink.__inits__, since it will attempt to evaluate hardcoded paths.
     # (We've defined all the variables manually, above: `resources` and `port`.)
     eval(Blink, :(empty!(__inits__)))
 
-    eval(HttpParser, :(lib = "libhttp_parser.dylib"))
-    eval(MbedTLS, :(const libmbedcrypto = "libmbedcrypto.2.dylib"))
+    eval(HttpParser, :(lib = basename(lib)))
+    eval(MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
 
     println("Done changing dependencies.")
 end
@@ -52,9 +51,12 @@ html() = """
  """
 
 function helloFromBlink()
+    # Set Blink port randomly before anything else.
+    eval(Blink, :(const port = get(ENV, "BLINK_PORT", rand(2_000:10_000))))
+
     # Create Blink window and load HTML.
     win = Blink.Window(Blink.shell(), Dict(:width=>850)); sleep(5.0)
-    body!(win, html(); fade=false) ; sleep(0.5)
+    body!(win, html(); fade=false) ; sleep(1)
     tools(win)
     sleep(2)  # wait for js to initialize
 
@@ -68,7 +70,7 @@ function helloFromBlink()
     # (This could be all done within js, but it's fun to see the full round trip.)
     Blink.handlers(win)["changeNameJulia"] = (n) -> (println("msg from js: $n"); Blink.@js_ win setName($n))
     # Set the input field to call the above julia callback when it's changed.
-    Blink.@js_ win nameEntry.onchange = (e) -> (msg("changeNameJulia", nameEntry.value); console.log("sent msg to julia!"); e.returnValue=false)
+    Blink.@js_ win nameEntry.onchange = (e) -> (Blink.msg("changeNameJulia", nameEntry.value); console.log("sent msg to julia!"); e.returnValue=false)
 
     while active(win)
         sleep(1)
