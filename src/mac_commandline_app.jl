@@ -9,6 +9,7 @@ function get_commandline_applescript(exe_dir, executable_path)
 end
 
 function build_commandline_app_bundle(builddir, binary_name, appname)
+    println("~~~~~~ Creating commandline-app wrapper applet. ~~~~~~~")
 
     mkpath(builddir)  # Create builddir if it doesn't already exist.
     applescript_file = "$builddir/build_$appname.applescript"
