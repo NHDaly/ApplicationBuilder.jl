@@ -6,6 +6,12 @@ const julia_v07 = VERSION > v"0.7-"
 builddir = mktempdir()
 @assert isdir(builddir)
 
+@testset "BuildApp Utils" begin
+@test r"""^com.[a-z0-9]+.myappnamedthisapp22$"""(
+            BuildApp.make_bundle_identifier("My app named this_app22")
+      )
+end
+
 @testset "HelloWorld.app" begin
 @test 0 == include("build_examples/hello.jl")
 @test isdir("$builddir/HelloWorld.app")

@@ -36,7 +36,7 @@ function build_app_bundle(juliaprog_main;
 
     builddir = abspath(builddir)
     if bundle_identifier == nothing
-        bundle_identifier = replace(lowercase("com.$(ENV["USER"]).$appname"), r"\s", "")
+        bundle_identifier = make_bundle_identifier(appname)
         println("  Using calculated bundle_identifier: '$bundle_identifier'")
     end
     binary_name = splitext(basename(juliaprog_main))[1]
@@ -259,6 +259,13 @@ end
 
 @static if Compat.Sys.islinux() || Compat.Sys.iswindows()
 	include("bundle.jl")
+end
+
+function make_bundle_identifier(appname)
+    cleanregex = r"[^a-zA-Z0-9]"
+    cleanuser = replace(lowercase(ENV["USER"]), cleanregex, "")
+    cleanapp = replace(lowercase(appname), cleanregex, "")
+    "com.$cleanuser.$cleanapp"
 end
 
 end # module
