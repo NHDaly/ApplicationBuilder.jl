@@ -244,8 +244,8 @@ function build_app_bundle(juliaprog_main;
     delete_if_present("*.ji","$libsDir/julia")
     delete_if_present("*.o","$libsDir/julia")
 
-    println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
     if certificate != nothing
+        println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
         sign_application_libs(launcherDir, certificate)
         if entitlements_file != nothing
             set_entitlements("$launcherDir/$binary_name", certificate, entitlements_file)
