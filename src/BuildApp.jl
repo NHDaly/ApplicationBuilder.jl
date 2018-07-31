@@ -59,7 +59,7 @@ function build_app_bundle(juliaprog_main;
 
     if commandline_app
         # Redefine launcherDir to put the binary where applet expects it.
-        launcherDir = build_commandline_app_bundle(builddir, binary_name, appname)
+        launcherDir = build_commandline_app_bundle(builddir, binary_name, appname, verbose)
     end
 
     mkpath(launcherDir)
