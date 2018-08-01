@@ -57,9 +57,11 @@ function build_app_bundle(juliaprog_main;
     resourcesDir="$appDir/Resources"
     libsDir="$appDir/Libraries"
 
+    applet_name = nothing
     if commandline_app
-        # Redefine launcherDir to put the binary where applet expects it.
-        launcherDir = build_commandline_app_bundle(builddir, binary_name, appname, verbose)
+        # TODO: What if the user specifies Resources that could overwrite
+        #  applet resources? (ie Scripts/ or applet.rsrc)
+        applet_name = build_commandline_app_bundle(builddir, binary_name, appname, verbose)
     end
 
     mkpath(launcherDir)
@@ -181,7 +183,7 @@ function build_app_bundle(juliaprog_main;
         	<key>CFBundleDisplayName</key>
         	<string>$appname</string>
         	<key>CFBundleExecutable</key>
-        	<string>$binary_name</string>
+        	<string>$(commandline_app ? applet_name : binary_name)</string>
         	<key>CFBundleIconFile</key>
         	<string>$appname.icns</string>
         	<key>CFBundleIdentifier</key>
