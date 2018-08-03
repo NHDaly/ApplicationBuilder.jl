@@ -137,7 +137,7 @@ function build_app_bundle(juliaprog_main;
                 cprog=custom_program_c, builddir=launcherDir, verbose=verbose,
                 autodeps=true, executable=true, julialibs=true, optimize="3",
                 debug="0", cpu_target="x86-64",
-                cc_flags="-mmacosx-version-min=10.10")
+                cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
     end
 
     for b in ["$launcherDir/$binary_name", "$launcherDir/$binary_name.dylib"]
