@@ -37,6 +37,8 @@ if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
     eval(HttpParser, :(lib = basename(lib)))
     eval(MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
 
+    eval(MacroTools, :(const animals_file = basename(animals_file)))
+
     println("Done changing dependencies.")
 end
 

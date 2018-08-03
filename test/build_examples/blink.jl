@@ -19,7 +19,9 @@ BuildApp.build_app_bundle(examples_blink;
     resources = [joinpath(blinkPkg, "deps","Julia.app"),
                  joinpath(blinkPkg, "src","AtomShell","main.js"),
                  joinpath(blinkPkg, "src","content","main.html"),
-                 joinpath(blinkPkg, "res")],
+                 joinpath(blinkPkg, "res"),
+                 MacroTools.animals_file,
+                ],
     # Get the current library names directly from the packages that use them,
     # which keeps this build script robust against lib version changes.
     libraries = [HttpParser.lib,
