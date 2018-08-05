@@ -57,5 +57,14 @@ if !julia_v07  # Blink doesn't yet work on julia v0.7.
 @test isfile("$builddir/HelloBlink.app/Contents/Resources/main.js")
 # Test that it runs correctly
 @test testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
+
+# Test that it can run without .julia directory (Dangerous!)
+begin
+    mv(Pkg.dir(), Pkg.dir()*".bak")  # NOTE: MUST mv() THIS BACK
+    try
+        @test_broken testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
+    end
+    mv(Pkg.dir()*".bak", Pkg.dir())  # NOTE: MUST RUN THIS LINE IF ABOVE IS RUN
+end
 end
 end
