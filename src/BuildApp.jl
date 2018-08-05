@@ -1,5 +1,7 @@
 module BuildApp
 
+println("PARSING (&& COMPILING) BuildApp")
+
 using Glob, PackageCompiler
 using Compat
 

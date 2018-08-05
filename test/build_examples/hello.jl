@@ -1,4 +1,4 @@
-using ApplicationBuilder; using BuildApp
+using ApplicationBuilder.BuildApp
 
 examples_hello = joinpath(@__DIR__, "..", "..", "examples", "hello.jl")
 

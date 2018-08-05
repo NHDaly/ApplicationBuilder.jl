@@ -11,7 +11,9 @@ module ApplicationBuilder
 # Build-script code should use the following module:
 #   using ApplicationBuilder; using BuildApp;
 
-push!(LOAD_PATH, @__DIR__) # Expose all modules in this package.
+println("PARSING (&& COMPILING) ApplicationBuilder")
+#push!(LOAD_PATH, @__DIR__) # Expose all modules in this package.
+include("BuildApp.jl")
 
 """
     ApplicationBuilder.App
