@@ -37,6 +37,11 @@ if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
     eval(HttpParser, :(lib = basename(lib)))
     eval(MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
 
+    using WebSockets
+    eval(WebSockets, :(using HttpServer))  # needed to cause @require lines to execute & compile
+    eval(WebSockets,
+        :(include(joinpath(Pkg.dir("WebSockets"),"src/HttpServer.jl"))))  # Manually load this from the @requires line.
+
     eval(MacroTools, :(const animals_file = basename(animals_file)))
 
     println("Done changing dependencies.")
@@ -58,8 +63,8 @@ function helloFromBlink()
 
     # Create Blink window and load HTML.
     win = Blink.Window(Blink.shell(), Dict(:width=>850)); sleep(5.0)
-    body!(win, html(); fade=false) ; sleep(1)
-    tools(win)
+    Blink.body!(win, html(); fade=false) ; sleep(1)
+    Blink.tools(win)
     sleep(2)  # wait for js to initialize
 
     # Example javascript interaction.

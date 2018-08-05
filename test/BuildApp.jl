@@ -62,7 +62,7 @@ if !julia_v07  # Blink doesn't yet work on julia v0.7.
 begin
     mv(Pkg.dir(), Pkg.dir()*".bak")  # NOTE: MUST mv() THIS BACK
     try
-        @test_broken testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
+        @test testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
     end
     mv(Pkg.dir()*".bak", Pkg.dir())  # NOTE: MUST RUN THIS LINE IF ABOVE IS RUN
 end
