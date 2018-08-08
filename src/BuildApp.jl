@@ -31,7 +31,7 @@ function build_app_bundle(juliaprog_main;
         resources = String[], libraries = String[], verbose = false,
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
-        commandline_app = false,
+        snoopfile = nothing, autosnoop = false, commandline_app = false,
     )
 
     builddir = abspath(builddir)
@@ -127,6 +127,14 @@ function build_app_bundle(juliaprog_main;
     # Compile the binary right into the app.
     println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
+    if autosnoop
+        if snoopfile != nothing
+            println("WARNING: autosnoop is overwriting user-specified snoopfile.")
+        end
+        snoopfile = "$builddir/$appname-snoopfile.jl"
+        write(snoopfile, """include("$(abspath("$juliaprog_main"))");  julia_main([""]); """)
+    end
+
     custom_program_c = "$(Pkg.dir())/ApplicationBuilder/src/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
@@ -135,7 +143,7 @@ function build_app_bundle(juliaprog_main;
         # Compile executable and copy julia libs to $launcherDir.
         PackageCompiler.build_executable(juliaprog_main, binary_name, custom_program_c;
                 builddir=launcherDir, verbose=verbose, optimize="3",
-                debug="0", cpu_target="x86-64",
+                snoopfile=snoopfile, debug="0", cpu_target="x86-64",
                 cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
     end
 
