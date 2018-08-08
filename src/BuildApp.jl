@@ -133,9 +133,8 @@ function build_app_bundle(juliaprog_main;
             "COMPILING_APPLE_BUNDLE"=>"true") do
         verbose && println("  PackageCompiler.static_julia(...)")
         # Compile executable and copy julia libs to $launcherDir.
-        PackageCompiler.static_julia(juliaprog_main;
-                cprog=custom_program_c, builddir=launcherDir, verbose=verbose,
-                autodeps=true, executable=true, copy_julialibs=true, optimize="3",
+        PackageCompiler.build_executable(juliaprog_main, binary_name, custom_program_c;
+                builddir=launcherDir, verbose=verbose, optimize="3",
                 debug="0", cpu_target="x86-64",
                 cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
     end
