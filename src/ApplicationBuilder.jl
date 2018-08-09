@@ -127,7 +127,7 @@ function build_app_bundle(juliaprog_main;
     # Compile the binary right into the app.
     println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
-    custom_program_c = "$(Pkg.dir())/ApplicationBuilder/src/program.c"
+    custom_program_c = "$(@__DIR__)/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
             "COMPILING_APPLE_BUNDLE"=>"true") do
