@@ -149,7 +149,7 @@ function build_app_bundle(juliaprog_main;
         try
             #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
             external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
-                 `grep $(dirname(Base.JULIA_HOME))`,  # filter julia lib deps
+                 `grep $(dirname(Compat.Sys.BINDIR))`,  # filter julia lib deps
                  `sed 's/\s*path//'`, # remove leading "  path"
                  `sed 's/(.*)$//'`)) # remove trailing parens
             for line in external_julia_deps
@@ -218,7 +218,7 @@ function build_app_bundle(juliaprog_main;
     write("$appDir/Info.plist", info_plist());
 
     # Copy Julia icons
-    julia_app_resources_dir() = joinpath(Base.JULIA_HOME, "..","..")
+    julia_app_resources_dir() = joinpath(Compat.Sys.BINDIR, "..","..")
     if (icns_file == nothing)
         icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
