@@ -22,6 +22,7 @@ git:
 #    - gfortran
 before_script: # homebrew for mac
    - julia -e 'if (VERSION < v"0.7-") Pkg.add("Blink"); Pkg.build("Blink"); using Blink; Blink.AtomShell.install(); end'
+   - julia -e 'Pkg.clone("https://github.com/NHDaly/ApplicationBuilderRuntimeUtils.jl.git")'
 
 ## uncomment the following lines to override the default test script
 #script:
