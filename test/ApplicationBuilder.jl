@@ -1,4 +1,6 @@
-using Base.Test
+using Compat
+
+using Compat.Test
 using ApplicationBuilder
 
 const julia_v07 = VERSION > v"0.7-"
@@ -64,6 +66,8 @@ macro testBundledSuccessfully(expr...)
     testBundledSuccessfully_macro(expr...)
 end
 
+if !julia_v07  # Blink and SDL don't yet work on julia v0.7.
+
 @testset "sdl: simple example of binary dependencies" begin
 @test 0 == include("build_examples/sdl.jl")
 # Test that it runs correctly
@@ -72,7 +76,6 @@ end
 @test @testBundledSuccessfully(`$builddir/HelloSDL2.app/Contents/MacOS/sdl`, 3)
 end
 
-if !julia_v07  # Blink doesn't yet work on julia v0.7.
 @testset "HelloBlink.app" begin
 @test 0 == include("build_examples/blink.jl")
 
