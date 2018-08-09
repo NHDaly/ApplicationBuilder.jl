@@ -1,4 +1,5 @@
 using ApplicationBuilder
+using Compat
 
 examples_blink = joinpath(@__DIR__, "..", "..", "examples", "sdl.jl")
 
@@ -21,7 +22,7 @@ libs = joinpath(builddir, "sdl_libs")
 mkpath(libs)
 function cp_lib(l)
     name = basename(l)
-    cp(l, joinpath(libs, name), follow_symlinks=true)
+    Compat.cp(l, joinpath(libs, name), follow_symlinks=true, force=true)
     l = joinpath(libs, name)
     run(`install_name_tool -id "$name" $l`)
     try
@@ -54,5 +55,5 @@ build_app_bundle(examples_blink;
     resources = [joinpath(sdlPkg,
                          "assets","fonts","FiraCode","ttf","FiraCode-Regular.ttf"),
                 ],
-    libraries = ["libs/*"],
+    libraries = ["$libs/*"],
     appname="HelloSDL2", builddir=builddir)

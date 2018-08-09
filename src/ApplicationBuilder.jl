@@ -127,13 +127,36 @@ function build_app_bundle(juliaprog_main;
     # Compile the binary right into the app.
     println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
+    # When Apple launches an app, it sets the current-working-directory to homedir.
+    # Therefore, we inject this function definition into the app, and call it from
+    # the C driver program.
+    utils_injection_file = "$launcherDir/applicationbuilderutils.jl"
+    write(utils_injection_file,
+        """
+            include("$(abspath(juliaprog_main))")
+        """*raw"""
+            using Compat
+
+            Base.@ccallable function cd_to_bundle_resources()::Void
+                full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
+                if Compat.Sys.isapple()
+                    m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
+                    if m != nothing
+                        resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
+                        cd(resources_dir)
+                    end
+                    println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
+                end
+            end
+            precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
+        """)
     custom_program_c = "$(@__DIR__)/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
             "COMPILING_APPLE_BUNDLE"=>"true") do
         verbose && println("  PackageCompiler.static_julia(...)")
         # Compile executable and copy julia libs to $launcherDir.
-        PackageCompiler.build_executable(juliaprog_main, binary_name, custom_program_c;
+        PackageCompiler.build_executable(utils_injection_file, binary_name, custom_program_c;
                 builddir=launcherDir, verbose=verbose, optimize="3",
                 debug="0", cpu_target="x86-64",
                 cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
@@ -231,6 +254,9 @@ function build_app_bundle(juliaprog_main;
 
     # --------------- CLEAN UP before distributing ---------------
     println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
+
+    # Delete the file we added to inject code.
+    rm(utils_injection_file)
 
     # Delete the tmp build files
     function delete_if_present(file, path)
