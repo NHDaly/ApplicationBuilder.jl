@@ -1,5 +1,3 @@
-using ApplicationBuilderRuntimeUtils
-
 using Libui
 
 
@@ -173,8 +171,6 @@ end
 
 
 Base.@ccallable function julia_main(ARGS::Vector{String})::Cint
-    ApplicationBuilderRuntimeUtils.change_dir_if_bundle()
-
     global progressbar = uiNewProgressBar()
     global spinbox = uiNewSpinbox(0, 100)
     global slider = uiNewSlider(0, 100)
