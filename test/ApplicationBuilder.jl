@@ -1,6 +1,7 @@
 using Compat
 
 using Compat.Test
+using Compat.Pkg
 using ApplicationBuilder
 
 const julia_v07 = VERSION > v"0.7-"
@@ -9,7 +10,7 @@ builddir = mktempdir()
 @assert isdir(builddir)
 
 @testset "make_bundle_identifier Utils" begin
-@test r"""^com.[a-z0-9]+.myappnamedthisapp22$"""(
+@test occursin(r"""^com.[a-z0-9]+.myappnamedthisapp22$""",
             ApplicationBuilder.make_bundle_identifier("My app named this_app22")
       )
 end

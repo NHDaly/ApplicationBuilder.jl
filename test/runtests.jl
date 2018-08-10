@@ -1,4 +1,4 @@
-using Base.Test
+using Compat.Test
 
 @testset "Test ApplicationBuilder (by compiling examples/*.jl)" begin
     include("ApplicationBuilder.jl")

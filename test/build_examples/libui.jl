@@ -1,8 +1,10 @@
 using ApplicationBuilder
 
+using Compat.Pkg
+
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a provided builddir.
-isdefined(:builddir) || (builddir="builddir")
+isdefined(@__MODULE__, :builddir) || (builddir="builddir")
 
 libUIPkg = Pkg.dir("Libui")
 

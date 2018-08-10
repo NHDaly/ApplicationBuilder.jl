@@ -137,7 +137,7 @@ function build_app_bundle(juliaprog_main;
         """*raw"""
             using Compat
 
-            Base.@ccallable function cd_to_bundle_resources()::Void
+            Base.@ccallable function cd_to_bundle_resources()::Compat.Nothing
                 full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
                 if Compat.Sys.isapple()
                     m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
@@ -287,8 +287,8 @@ end
 
 function make_bundle_identifier(appname)
     cleanregex = r"[^a-zA-Z0-9]"
-    cleanuser = replace(lowercase(ENV["USER"]), cleanregex, "")
-    cleanapp = replace(lowercase(appname), cleanregex, "")
+    cleanuser = replace(lowercase(ENV["USER"]), cleanregex => "")
+    cleanapp = replace(lowercase(appname), cleanregex => "")
     "com.$cleanuser.$cleanapp"
 end
 
