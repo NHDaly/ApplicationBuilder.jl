@@ -87,6 +87,6 @@ end
 # Test that it runs correctly
 @test testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
 # Test that it can run without .julia directory
-@test @testBundledSuccessfully(`$builddir/HelloBlink.app/Contents/MacOS/blink`, 3)
+@test @testBundledSuccessfully(`$builddir/HelloBlink.app/Contents/MacOS/blink`, 10)
 end
 end
