@@ -22,6 +22,7 @@ using Blink
 # the paths to all be relative paths, so that the app bundle can be moved.
 if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
     println("Overriding Blink dependency paths.")
+    println("Overriding Blink dependency paths.")
     eval(Blink.AtomShell, :(_electron = "Julia.app/Contents/MacOS/Julia"))
     eval(Blink.AtomShell, :(mainjs = "main.js"))
     eval(Blink, :(buzz = "main.html"))
@@ -35,6 +36,11 @@ if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
 
     eval(HttpParser, :(lib = basename(lib)))
     eval(MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
+
+    using WebSockets
+    eval(WebSockets, :(using HttpServer))  # needed to cause @require lines to execute & compile
+    eval(WebSockets,
+        :(include(joinpath(Pkg.dir("WebSockets"),"src/HttpServer.jl"))))  # Manually load this from the @requires line.
 
     println("Done changing dependencies.")
 end
