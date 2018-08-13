@@ -302,4 +302,38 @@ end
     include("installer.jl")
 end
 
+"""
+module ApplicationBuilder.App is now deprecated. Please remove any references to it.
+"""
+module App
+function change_dir_if_bundle()
+    Base.depwarn("""
+         `change_dir_if_bundle` is deprecated and now unnecessary. Its
+         functionality now happens automatically for all apps built with
+         ApplicationBuilder, so your app code should *not* import ApplicationBuilder.""",
+         :change_dir_if_bundle)
+end
+end  # module
+end  # module
+
+"""
+module BuildApp is now deprecated. Please remove any references to it.
+"""
+module BuildApp
+using Compat
+function __init__()
+    if VERSION > v"0.7-"
+        Compat.@warn """
+             NOTE: `module BuildApp` has been removed and now does nothing. You
+                          should remove `using BuildApp` from any programs!
+                 This message will be removed in the next release of ApplicationBuilder.
+             """
+    else
+        Compat.@warn """
+             NOTE: `module BuildApp` is deprecated and now does nothing. You
+                          should remove `using BuildApp` from any programs!
+                 This message will be removed in the next release of ApplicationBuilder.
+             """
+    end
+end
 end  # module
