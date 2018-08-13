@@ -62,8 +62,8 @@ function helloFromBlink()
 
     # Create Blink window and load HTML.
     win = Blink.Window(Blink.shell(), Dict(:width=>850)); sleep(5.0)
-    body!(win, html(); fade=false) ; sleep(1)
-    tools(win)
+    Blink.body!(win, html(); fade=false) ; sleep(1)
+    Blink.tools(win)
     sleep(2)  # wait for js to initialize
 
     # Example javascript interaction.
@@ -78,7 +78,7 @@ function helloFromBlink()
     # Set the input field to call the above julia callback when it's changed.
     Blink.@js_ win nameEntry.onchange = (e) -> (Blink.msg("changeNameJulia", nameEntry.value); console.log("sent msg to julia!"); e.returnValue=false)
 
-    while active(win)
+    while Blink.active(win)
         sleep(1)
     end
 end
