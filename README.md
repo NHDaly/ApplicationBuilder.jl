@@ -15,7 +15,7 @@ There is both a native julia interface, in the `BuildApp` module, and a command-
 
 To compile and bundle your julia program into a distributable app, use `BuildApp.build_app_bundle`:
 ```julia
-julia> using ApplicationBuilder; using BuildApp
+julia> using ApplicationBuilder
 help?> build_app_bundle()
   # 1 method for generic function "build_app_bundle":
   build_app_bundle(juliaprog_main; appname, builddir, resources, libraries, verbose, bundle_identifier, app_version, icns_file, certificate, entitlements_file)
