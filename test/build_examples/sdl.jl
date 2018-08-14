@@ -38,6 +38,7 @@ function cp_lib(l)
             println(cmd)
             run(cmd)
         end
+    catch
     end
 end
 cp_lib(SDL2.libSDL2)
