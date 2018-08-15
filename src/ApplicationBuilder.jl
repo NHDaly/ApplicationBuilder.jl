@@ -1,10 +1,10 @@
 module ApplicationBuilder
 
 using Compat
-Compat.@warn """ApplicationBuilder has changed a bit since julia 0.6:
+Compat.@warn """ApplicationBuilder has changed since JuliaCon 2018.
   - `module BuildApp` has been removed. You should remove `using BuildApp`
-      from your build scripts to build with julia v0.7.
-  - You should also remove `using ApplicationBuilder` from the source-code of
+      from your build scripts, and just use `using ApplicationBuilder`.
+  - You should also _remove_ `using ApplicationBuilder` from the source-code of
       programs being built, since the `change_dir_if_bundle` behavior will
       now come default for all applications. `using ApplicationBuilder` in
       your program source may cause it to fail to build.
