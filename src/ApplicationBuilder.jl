@@ -104,7 +104,7 @@ function build_app_bundle(juliaprog_main;
             elseif !isempty(glob(pattern))
                 run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
             else
-                warn("Skipping unknown file '$pattern'!")
+                Compat.@warn "Skipping unknown file '$pattern'!"
             end
         end
 
@@ -267,7 +267,7 @@ function build_app_bundle(juliaprog_main;
     if isfile(icns_file)
         Compat.cp(icns_file, "$resourcesDir/$appname.icns", force=true);
     else
-        warn("Skipping nonexistent icons file: '$icns_file'")
+        Compat.@warn "Skipping nonexistent icons file: '$icns_file'"
     end
 
     # --------------- CLEAN UP before distributing ---------------
