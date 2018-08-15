@@ -1,10 +1,12 @@
-using ApplicationBuilder; using BuildApp
+using ApplicationBuilder
+using Compat
+using Compat.Pkg
 
 examples_blink = joinpath(@__DIR__, "..", "..", "examples", "sdl.jl")
 
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a globally-defined builddir.
-isdefined(:builddir) || (builddir="builddir")
+Compat.isdefined(:builddir) || (builddir="builddir")
 
 using SimpleDirectMediaLayer
 SDL2 = SimpleDirectMediaLayer
@@ -21,7 +23,7 @@ libs = joinpath(builddir, "sdl_libs")
 mkpath(libs)
 function cp_lib(l)
     name = basename(l)
-    cp(l, joinpath(libs, name), follow_symlinks=true)
+    Compat.cp(l, joinpath(libs, name), follow_symlinks=true, force=true)
     l = joinpath(libs, name)
     run(`install_name_tool -id "$name" $l`)
     try
@@ -36,6 +38,7 @@ function cp_lib(l)
             println(cmd)
             run(cmd)
         end
+    catch
     end
 end
 cp_lib(SDL2.libSDL2)
@@ -49,10 +52,10 @@ cp_lib(joinpath(homebrew, "deps/usr/lib/libogg.dylib"))
 cp_lib(joinpath(homebrew, "deps/usr/lib/libpng16.dylib"))
 
 
-BuildApp.build_app_bundle(examples_blink;
+build_app_bundle(examples_blink;
     verbose = true,
     resources = [joinpath(sdlPkg,
                          "assets","fonts","FiraCode","ttf","FiraCode-Regular.ttf"),
                 ],
-    libraries = ["libs/*"],
+    libraries = ["$libs/*"],
     appname="HelloSDL2", builddir=builddir)

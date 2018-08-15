@@ -6,10 +6,10 @@
 # test/build_examples/sdl.jl
 # https://github.com/NHDaly/ApplicationBuilder.jl/tree/master/test/build_examples/sdl.jl
 
-using ApplicationBuilder
-
 using SimpleDirectMediaLayer
 SDL2 = SimpleDirectMediaLayer
+
+using Compat.Pkg
 
 fontFile = joinpath(Pkg.dir("SimpleDirectMediaLayer"),
                         "assets","fonts","FiraCode","ttf","FiraCode-Regular.ttf")
@@ -80,7 +80,6 @@ function helloFromSDL()
 end
 
 Base.@ccallable function julia_main(args::Vector{String})::Cint
-    ApplicationBuilder.App.change_dir_if_bundle()
     helloFromSDL()
     return 0
 end
