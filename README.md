@@ -107,3 +107,10 @@ optional arguments:
 
 # License
 This project is licensed under the terms of the MIT license.
+
+# Thanks
+Thanks for the help from these contributors and everyone else!:
+ - [ranjanan](https://github.com/ranjanan)
+ - [lucatrv](https://github.com/lucatrv)
+ - [simondanish](https://github.com/simondanish)
+ - [vtjnash](https://github.com/vtjnash)
