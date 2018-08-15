@@ -1,7 +1,17 @@
 module ApplicationBuilder
 
-using Glob, PackageCompiler
 using Compat
+Compat.@warn """ApplicationBuilder has changed a bit since julia 0.6:
+  - `module BuildApp` has been removed. You should remove `using BuildApp`
+      from your build scripts to build with julia v0.7.
+  - You should also remove `using ApplicationBuilder` from the source-code of
+      programs being built, since the `change_dir_if_bundle` behavior will
+      now come default for all applications. `using ApplicationBuilder` in
+      your program source may cause it to fail to build.
+ This message will be removed in the next version of ApplicationBuilder.
+"""
+
+using Glob, PackageCompiler
 
 export build_app_bundle
 
@@ -31,7 +41,7 @@ function build_app_bundle(juliaprog_main;
         resources = String[], libraries = String[], verbose = false,
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
-        commandline_app = false,
+        snoopfile = nothing, autosnoop = false, commandline_app = false,
     )
 
     builddir = abspath(builddir)
@@ -127,6 +137,14 @@ function build_app_bundle(juliaprog_main;
     # Compile the binary right into the app.
     println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
+    if autosnoop
+        if snoopfile != nothing
+            println("WARNING: autosnoop is overwriting user-specified snoopfile.")
+        end
+        snoopfile = "$builddir/$appname-snoopfile.jl"
+        write(snoopfile, """include("$(abspath("$juliaprog_main"))");  julia_main([""]); """)
+    end
+
     # When Apple launches an app, it sets the current-working-directory to homedir.
     # Therefore, we inject this function definition into the app, and call it from
     # the C driver program.
@@ -158,7 +176,7 @@ function build_app_bundle(juliaprog_main;
         # Compile executable and copy julia libs to $launcherDir.
         PackageCompiler.build_executable(utils_injection_file, binary_name, custom_program_c;
                 builddir=launcherDir, verbose=verbose, optimize="3",
-                debug="0", cpu_target="x86-64",
+                snoopfile=snoopfile, debug="0", cpu_target="x86-64",
                 cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
     end
 
@@ -302,38 +320,4 @@ end
     include("installer.jl")
 end
 
-"""
-module ApplicationBuilder.App is now deprecated. Please remove any references to it.
-"""
-module App
-function change_dir_if_bundle()
-    Base.depwarn("""
-         `change_dir_if_bundle` is deprecated and now unnecessary. Its
-         functionality now happens automatically for all apps built with
-         ApplicationBuilder, so your app code should *not* import ApplicationBuilder.""",
-         :change_dir_if_bundle)
-end
-end  # module
-end  # module
-
-"""
-module BuildApp is now deprecated. Please remove any references to it.
-"""
-module BuildApp
-using Compat
-function __init__()
-    if VERSION > v"0.7-"
-        Compat.@warn """
-             NOTE: `module BuildApp` has been removed and now does nothing. You
-                          should remove `using BuildApp` from any programs!
-                 This message will be removed in the next release of ApplicationBuilder.
-             """
-    else
-        Compat.@warn """
-             NOTE: `module BuildApp` is deprecated and now does nothing. You
-                          should remove `using BuildApp` from any programs!
-                 This message will be removed in the next release of ApplicationBuilder.
-             """
-    end
-end
 end  # module

@@ -6,7 +6,7 @@ examples_blink = joinpath(@__DIR__, "..", "..", "examples", "sdl.jl")
 
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a globally-defined builddir.
-isdefined(@__MODULE__, :builddir) || (builddir="builddir")
+Compat.isdefined(:builddir) || (builddir="builddir")
 
 using SimpleDirectMediaLayer
 SDL2 = SimpleDirectMediaLayer
@@ -38,6 +38,7 @@ function cp_lib(l)
             println(cmd)
             run(cmd)
         end
+    catch
     end
 end
 cp_lib(SDL2.libSDL2)

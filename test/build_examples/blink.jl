@@ -1,12 +1,13 @@
 using ApplicationBuilder
 
+using Compat
 using Compat.Pkg
 
 examples_blink = joinpath(@__DIR__, "..", "..", "examples", "blink.jl")
 
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a provided builddir.
-isdefined(@__MODULE__, :builddir) || (builddir="builddir")
+Compat.isdefined(:builddir) || (builddir="builddir")
 
 blinkPkg = Pkg.dir("Blink")
 httpParserPkg = Pkg.dir("HttpParser")
