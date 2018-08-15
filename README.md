@@ -1,29 +1,75 @@
 # Julia Application Builder
 [![Build Status](https://travis-ci.org/NHDaly/ApplicationBuilder.jl.svg?branch=master)](https://travis-ci.org/NHDaly/ApplicationBuilder.jl) [![Coverage Status](https://coveralls.io/repos/github/NHDaly/ApplicationBuilder.jl/badge.svg?branch=master)](https://coveralls.io/github/NHDaly/ApplicationBuilder.jl?branch=master)
 
-Build a distributable "App" from a julia program!
+Turn your julia program into a standalone, distributable, statically-compiled "App"!
 
-This tool compiles a julia program and bundles it up into a distributable application, on macOS, Windows and Linux!
-
-The goal of this tool is to allow you to distribute an entirely standalone
-application from your julia code. That is, someone should be able to download
+ApplicationBuilder compiles a julia program and bundles it up into a distributable application, on macOS, Windows and Linux! After building, your users can download
 your application and run it without having Julia installed.
 
-There is both a native julia interface, in the `BuildApp` module, and a command-line interface, `build_app.jl`.
+## ApplicationBuilder
 
-## BuildApp (The Julia interface)
-
-To compile and bundle your julia program into a distributable app, use `BuildApp.build_app_bundle`:
+To compile and bundle your julia program into a distributable app, use `ApplicationBuilder.build_app_bundle`:
 ```julia
 julia> using ApplicationBuilder
 help?> build_app_bundle()
   # 1 method for generic function "build_app_bundle":
-  build_app_bundle(juliaprog_main; appname, builddir, resources, libraries, verbose, bundle_identifier, app_version, icns_file, certificate, entitlements_file)
+  build_app_bundle(juliaprog_main; appname, builddir, resources, libraries, verbose, bundle_identifier, app_version, icns_file, certificate, entitlements_file, snoopfile, autosnoop, commandline_app) in ApplicationBuilder at /Users/daly/.julia/v0.6/ApplicationBuilder/src/ApplicationBuilder.jl:47
 ```
 
-Note that `BuildApp` is a separate module, and you have to first run `using ApplicationBuilder` to be able to import it.
+## Usage
+To build a julia program into an application, you'll need to do two steps:
+
+1. Wrap your code in `julia_main` function. If the main entry-point to your code is a function, `my_code()`, it would look like this:
+    ```julia
+    # my_julia_main.jl
+    include("my_code.jl")
+    Base.@ccallable function julia_main(ARGS::Vector{String})::Cint
+        return my_code()
+    end
+    ```
+    The easiest thing to do is to maintain this as a separate script, but you can put this anywhere in your project.
+1. Call `build_app_bundle` with the file that provides `julia_main`. The easiest way to do this is to maintain a build script, e.g.:
+    ```julia
+    # build.jl
+    using ApplicationBuilder
+    build_app_bundle("src/my_julia_main.jl", appname="MyCode");
+    ```
+
+## Compatibility
+
+`ApplicationBuilder` supports macOS, Windows, and Linux on `julia v0.6` and `julia v0.7`.
+Currently, ApplicationBuilder doesn't do cross-compilation, so to compile for Windows, you need to run it from a Windows machine, etc.
+
+## Running an example:
+After cloning the repository, you can build an App out of the example program, `examples/hello.jl`, like this:
+
+```julia
+julia> build_app_bundle("$(homedir())/.julia/v0.6/ApplicationBuilder/examples/hello.jl", appname="HelloWorld", verbose=true);
+```
+
+or like this:
+
+```bash
+$ julia build_app.jl -v examples/hello.jl "HelloWorld"
+```
+
+This will produce `builddir/HelloWorld.app`, which you can double click, and it will indeed greet you!
+
+The simple example HelloWorld.app has no binary dependencies -- that is, it
+doesn't need any extra libraries besides Julia. Many Julia packages come bundled
+with their own binary dependencies, and if you want to use them in your app,
+you'll have to add those dependencies via the `libraries` (`-L`) option for libs
+and `resources` (`-R`) for bundle resources.
+
+### More examples
+There are many more examples in the `examples` directory, each of which have a corresponding _build file_ in the `test/build_examples` directory. You can build an example simply by running the build file:
+```julia
+julia> include("$(homedir())/.julia/v0.6/ApplicationBuilder/test/build_examples/commandline_hello.jl")
+```
 
 ## build_app.jl (The command-line tool)
+
+There is also a command-line interface, through `build_app.jl`, if you prefer it. The main development is on the Julia API, though, so this sometimes lags behind. Feel free to send a PR if it's missing anything! :)
 
 Run `julia build_app.jl -h` for help:
 ```
@@ -58,33 +104,6 @@ optional arguments:
      # Build MyGame, and copy in imgs/, mus.wav and all files in libs/
      build_app.jl -R imgs -R mus.wav -L lib/* main.jl MyGame
  ```
-
-------------------
-
-## Compatibility
-
-`ApplicationBuilder` supports macOS, Windows, and Linux on `julia v0.6`. Support for `v0.7` is coming soon.
-
-## Running an example:
-After cloning the repository, you can build an App out of the example program, `examples/hello.jl`, like this:
-
-```julia
-julia> build_app_bundle("/Users/Daly/.julia/v0.6/ApplicationBuilder/examples/hello.jl", appname="HelloWorld", verbose=true);
-```
-
-or like this:
-
-```bash
-$ julia build_app.jl -v examples/hello.jl "HelloWorld"
-```
-
-This will produce `builddir/HelloWorld.app`, which you can double click, and it will indeed greet you!
-
-The simple example HelloWorld.app has no binary dependencies -- that is, it
-doesn't need any extra libraries besides Julia. Many Julia packages come bundled
-with their own binary dependencies, and if you want to use them in your app,
-you'll have to add those dependencies via the `libraries` (`-L`) option for libs
-and `resources` (`-R`) for bundle resources.
 
 # License
 This project is licensed under the terms of the MIT license.
