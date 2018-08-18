@@ -177,6 +177,7 @@ function build_app_bundle(juliaprog_main;
         PackageCompiler.build_executable(utils_injection_file, binary_name, custom_program_c;
                 builddir=launcherDir, verbose=verbose, optimize="3",
                 snoopfile=snoopfile, debug="0", cpu_target="x86-64",
+                compile="all",
                 cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
     end
 

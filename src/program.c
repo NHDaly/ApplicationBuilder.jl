@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
     // jl_options.compile_enabled = JL_OPTIONS_COMPILE_OFF;
     // JULIAC_PROGRAM_LIBNAME defined on command-line for compilation
     jl_options.image_file = JULIAC_PROGRAM_LIBNAME;
+    jl_options.compile_enabled = 3;  // 0 = "no"; 3 = "min"; 1 = "yes" (default)
     julia_init(JL_IMAGE_JULIA_HOME);
 
     // Initialize Core.ARGS with the full argv.
