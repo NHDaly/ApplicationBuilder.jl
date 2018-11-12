@@ -28,13 +28,13 @@ function installer(builddir; name = "nothing",
 	SectionEnd
 	"""
 
-	info("Creating installer at $builddir")
+	@info "Creating installer at $builddir"
 	nsis_file = joinpath(builddir, "..", "$name.nsi")
 	open(nsis_file, "w") do f
 		write(f, nsis_commands)    
 	end
 	run(`makensis $nsis_file`)
 
-	info("Created installer successfully.")
+	@info "Created installer successfully."
 
 end
