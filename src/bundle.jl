@@ -13,7 +13,7 @@ function build_app_bundle(script::String;
 	script = abspath(script)
 	base_path = dirname(script)
 	builddir = joinpath(base_path, builddir, appname)
-	info("Building at path $builddir")
+	@info "Building at path $builddir"
 	mkpath(builddir)
 
 	core_path = joinpath(builddir, "core")
@@ -27,14 +27,14 @@ function build_app_bundle(script::String;
 
 	delim = Compat.Sys.iswindows() ? '\\' : '/'
 
-	info("Copying resources:")
+	@info "Copying resources:"
 	for res in resources
 		print("Copying $res...")
 		Compat.cp(res, joinpath(res_path, split(res, delim)[end]), force = true)
 		println("... done.")
 	end
 
-	info("Copying libraries")
+	@info "Copying libraries"
 	for lib in libraries
 		print("Copying $lib...")
 		Compat.cp(lib, joinpath(lib_path, split(lib, delim)[end]), force = true)
