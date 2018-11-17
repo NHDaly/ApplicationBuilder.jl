@@ -24,7 +24,7 @@ function build_commandline_app_bundle(builddir, binary_name, appname, verbose)
     applet_name = "applet"
     if binary_name == applet_name  # Prevent collisions.
         applet_name = "applet_wrapper"
-        Compat.mv("$app_path/Contents/MacOS/applet", "$app_path/Contents/MacOS/$applet_name", force=true)
+        mv("$app_path/Contents/MacOS/applet", "$app_path/Contents/MacOS/$applet_name", force=true)
     end
     # Remove unneeded applet files it creates.
     rm("$app_path/Contents/Resources/applet.icns")

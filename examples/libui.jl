@@ -2,9 +2,6 @@ using Libui
 
 
 using Libui
-@static if VERSION < v"0.7-"
-	using Compat: Nothing
-end
 
 #const progressbar::Ptr{uiProgressBar} = C_NULL
 #const spinbox::Ptr{uiProgressBar} = C_NULL

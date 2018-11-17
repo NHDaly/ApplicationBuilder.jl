@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 
 julia = Base.julia_cmd().exec[1]
 build_app_jl = joinpath(@__DIR__, "..", "build_app.jl")

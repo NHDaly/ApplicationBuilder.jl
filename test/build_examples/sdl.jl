@@ -1,12 +1,11 @@
 using ApplicationBuilder
-using Compat
-using Compat.Pkg
+using Pkg
 
 examples_blink = joinpath(@__DIR__, "..", "..", "examples", "sdl.jl")
 
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a globally-defined builddir.
-Compat.isdefined(:builddir) || (builddir="builddir")
+@isdefined(builddir) || (builddir="builddir")
 
 using SimpleDirectMediaLayer
 SDL2 = SimpleDirectMediaLayer
@@ -23,7 +22,7 @@ libs = joinpath(builddir, "sdl_libs")
 mkpath(libs)
 function cp_lib(l)
     name = basename(l)
-    Compat.cp(l, joinpath(libs, name), follow_symlinks=true, force=true)
+    cp(l, joinpath(libs, name), follow_symlinks=true, force=true)
     l = joinpath(libs, name)
     run(`install_name_tool -id "$name" $l`)
     try

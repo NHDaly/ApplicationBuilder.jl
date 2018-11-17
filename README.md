@@ -37,8 +37,9 @@ To build a julia program into an application, you'll need to do two steps:
 
 ## Compatibility
 
-`ApplicationBuilder` supports macOS, Windows, and Linux on `julia v0.6` and `julia v0.7`.
-Currently, ApplicationBuilder doesn't do cross-compilation, so to compile for Windows, you need to run it from a Windows machine, etc.
+`ApplicationBuilder` supports macOS, Windows, and Linux.
+Currently, ApplicationBuilder doesn't do cross-compilation, so to compile for
+Windows, you need to run it from a Windows machine, etc.
 
 ## Running an example:
 After cloning the repository, you can build an App out of the example program, `examples/hello.jl`, like this:
