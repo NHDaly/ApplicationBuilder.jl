@@ -1,7 +1,5 @@
-using Compat
-
-using Compat.Test
-using Compat.Pkg
+using Test
+using Pkg
 using ApplicationBuilder
 
 const julia_v07 = VERSION > v"0.7-"

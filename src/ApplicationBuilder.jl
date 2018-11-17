@@ -1,21 +1,10 @@
 module ApplicationBuilder
 
-using Compat
-Compat.@warn """ApplicationBuilder has changed since JuliaCon 2018.
-  - `module BuildApp` has been removed. You should remove `using BuildApp`
-      from your build scripts, and just use `using ApplicationBuilder`.
-  - You should also _remove_ `using ApplicationBuilder` from the source-code of
-      programs being built, since the `change_dir_if_bundle` behavior will
-      now come default for all applications. `using ApplicationBuilder` in
-      your program source may cause it to fail to build.
- This message will be removed in the next version of ApplicationBuilder.
-"""
-
 using Glob, PackageCompiler
 
 export build_app_bundle
 
-@static if Compat.Sys.isapple()
+@static if Sys.isapple()
 
 include("sign_mac_app.jl")
 include("mac_commandline_app.jl")
@@ -104,7 +93,7 @@ function build_app_bundle(juliaprog_main;
             elseif !isempty(glob(pattern))
                 run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
             else
-                Compat.@warn "Skipping unknown file '$pattern'!"
+                @warn "Skipping unknown file '$pattern'!"
             end
         end
 
@@ -153,11 +142,9 @@ function build_app_bundle(juliaprog_main;
         """
             include("$(abspath(juliaprog_main))")
         """*raw"""
-            using Compat
-
-            Base.@ccallable function cd_to_bundle_resources()::Compat.Nothing
+            Base.@ccallable function cd_to_bundle_resources()::Nothing
                 full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
-                if Compat.Sys.isapple()
+                if Sys.isapple()
                     m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
                     if m != nothing
                         resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
@@ -190,7 +177,7 @@ function build_app_bundle(juliaprog_main;
         try
             #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
             external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
-                 `grep $(dirname(Compat.Sys.BINDIR))`,  # filter julia lib deps
+                 `grep $(dirname(Sys.BINDIR))`,  # filter julia lib deps
                  `sed 's/\s*path//'`, # remove leading "  path"
                  `sed 's/(.*)$//'`)) # remove trailing parens
             for line in external_julia_deps
@@ -259,15 +246,15 @@ function build_app_bundle(juliaprog_main;
     write("$appDir/Info.plist", info_plist());
 
     # Copy Julia icons
-    julia_app_resources_dir() = joinpath(Compat.Sys.BINDIR, "..","..")
+    julia_app_resources_dir() = joinpath(Sys.BINDIR, "..","..")
     if (icns_file == nothing)
         icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
     end
     if isfile(icns_file)
-        Compat.cp(icns_file, "$resourcesDir/$appname.icns", force=true);
+        cp(icns_file, "$resourcesDir/$appname.icns", force=true);
     else
-        Compat.@warn "Skipping nonexistent icons file: '$icns_file'"
+        @warn "Skipping nonexistent icons file: '$icns_file'"
     end
 
     # --------------- CLEAN UP before distributing ---------------
@@ -312,11 +299,11 @@ end
 
 end  # isapple
 
-@static if Compat.Sys.islinux() || Compat.Sys.iswindows()
+@static if Sys.islinux() || Sys.iswindows()
 	include("bundle.jl")
 end
 
-@static if Compat.Sys.iswindows()
+@static if Sys.iswindows()
     include("installer.jl")
 end
 

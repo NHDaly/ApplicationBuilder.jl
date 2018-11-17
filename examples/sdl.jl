@@ -9,7 +9,7 @@
 using SimpleDirectMediaLayer
 SDL2 = SimpleDirectMediaLayer
 
-using Compat.Pkg
+using Pkg
 
 fontFile = joinpath(Pkg.dir("SimpleDirectMediaLayer"),
                         "assets","fonts","FiraCode","ttf","FiraCode-Regular.ttf")
