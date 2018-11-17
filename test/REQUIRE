@@ -1,5 +1,5 @@
 
-Blink
+Blink#master  # This test is going to be failing until https://github.com/JunoLab/Blink.jl/pull/174 is merged
 MacroTools#master   # Needed for Blink. MacroTools is statically compilable only on master.
 
 # SimpleDirectMediaLayer  # disabled since Cairo is currently broken in METADATA.
