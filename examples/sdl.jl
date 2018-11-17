@@ -16,9 +16,9 @@ fontFile = joinpath(Pkg.dir("SimpleDirectMediaLayer"),
 
 # Override SDL libs + assets locations if this script is being compiled for mac .app builds
 if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
-    eval(SDL2, :(libSDL2 = "libSDL2.dylib"))
-    eval(SDL2, :(libSDL2_ttf = "libSDL2_ttf.dylib"))
-    eval(SDL2, :(libSDL2_mixer = "libSDL2_mixer.dylib"))
+    Core.eval(SDL2, :(libSDL2 = "libSDL2.dylib"))
+    Core.eval(SDL2, :(libSDL2_ttf = "libSDL2_ttf.dylib"))
+    Core.eval(SDL2, :(libSDL2_mixer = "libSDL2_mixer.dylib"))
 
     fontFile = basename(fontFile)
 end

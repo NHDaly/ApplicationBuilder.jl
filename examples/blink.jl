@@ -23,24 +23,23 @@ using Blink
 if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
     println("Overriding Blink dependency paths.")
     println("Overriding Blink dependency paths.")
-    eval(Blink.AtomShell, :(_electron = "Julia.app/Contents/MacOS/Julia"))
-    eval(Blink.AtomShell, :(mainjs = "main.js"))
-    eval(Blink, :(buzz = "main.html"))
-    eval(Blink, :(resources = Dict("spinner.css" => "res/spinner.css",
+    Core.eval(Blink.AtomShell, :(_electron = "Julia.app/Contents/MacOS/Julia"))
+    Core.eval(Blink.AtomShell, :(mainjs = "main.js"))
+    Core.eval(Blink, :(buzz = "main.html"))
+    Core.eval(Blink, :(resources = Dict("spinner.css" => "res/spinner.css",
                              "blink.js" => "res/blink.js",
                              "blink.css" => "res/blink.css",
                              "reset.css" => "res/reset.css")))
     # Clear out Blink.__inits__, since it will attempt to evaluate hardcoded paths.
     # (We've defined all the variables manually, above: `resources` and `port`.)
-    eval(Blink, :(empty!(__inits__)))
+    Core.eval(Blink, :(empty!(__inits__)))
 
-    eval(HttpParser, :(lib = basename(lib)))
-    eval(MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
+    Core.eval(Blink.Mux.HTTP.MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
 
-    using WebSockets
-    eval(WebSockets, :(using HttpServer))  # needed to cause @require lines to execute & compile
-    eval(WebSockets,
-        :(include(joinpath(Pkg.dir("WebSockets"),"src/HttpServer.jl"))))  # Manually load this from the @requires line.
+#    WebSockets = Blink.WebSockets
+#    Core.eval(WebSockets, :(using HttpServer))  # needed to cause @require lines to execute & compile
+#    Core.eval(WebSockets,
+#        :(include(joinpath(Pkg.dir("WebSockets"),"src/HttpServer.jl"))))  # Manually load this from the @requires line.
 
     println("Done changing dependencies.")
 end
@@ -57,7 +56,7 @@ html() = """
 
 function helloFromBlink()
     # Set Blink port randomly before anything else.
-    eval(Blink, :(const port = get(ENV, "BLINK_PORT", rand(2_000:10_000))))
+    Blink.port[] = get(ENV, "BLINK_PORT", rand(2_000:10_000))
 
     # Create Blink window and load HTML.
     win = Blink.Window(Blink.shell(), Dict(:width=>850)); sleep(5.0)

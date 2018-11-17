@@ -8,13 +8,11 @@ examples_blink = joinpath(@__DIR__, "..", "..", "examples", "blink.jl")
 # example, or from runtests.jl using a provided builddir.
 @isdefined(builddir) || (builddir="builddir")
 
-blinkPkg = Pkg.dir("Blink")
-httpParserPkg = Pkg.dir("HttpParser")
-mbedTLSPkg = Pkg.dir("MbedTLS")
-
-@assert blinkPkg != nothing "Blink is not installed!"
-
 using Blink
+MbedTLS = Blink.Mux.HTTP.MbedTLS
+
+blinkPkg = dirname(dirname(pathof(Blink)))
+mbedTLSPkg = dirname(dirname(pathof(MbedTLS)))
 
 ApplicationBuilder.build_app_bundle(examples_blink;
     verbose = true,
@@ -24,6 +22,5 @@ ApplicationBuilder.build_app_bundle(examples_blink;
                  joinpath(blinkPkg, "res")],
     # Get the current library names directly from the packages that use them,
     # which keeps this build script robust against lib version changes.
-    libraries = [HttpParser.lib,
-                 MbedTLS.libmbedcrypto],
+    libraries = [MbedTLS.libmbedcrypto],
     appname="HelloBlink", builddir=builddir)

@@ -2,8 +2,6 @@ using Test
 using Pkg
 using ApplicationBuilder
 
-const julia_v07 = VERSION > v"0.7-"
-
 builddir = mktempdir()
 @assert isdir(builddir)
 
@@ -37,14 +35,14 @@ end
 
 
 function testRunAndKillProgramSucceeds(cmd, timeout=10)
-    out, _, p = readandwrite(cmd) # Make sure it runs correctly
+    p = open(cmd, "r+") # Make sure it runs correctly
     sleep(1)
-    process_exited(p) && (println("Test Failed: failed to launch: \n", readstring(out)); return false)
+    process_exited(p) && (println("Test Failed: failed to launch: \n", read(p.out, String)); return false)
     sleep(timeout)
-    process_exited(p) && (println("Test Failed: Process died: \n", readstring(out)); return false)
+    process_exited(p) && (println("Test Failed: Process died: \n", read(p.out, String)); return false)
     # Manually kill program after it's been running for a bit.
     kill(p); sleep(1)
-    process_exited(p) || (println("Test Failed: Process failed to exit: \n", readstring(out)); return false)
+    process_exited(p) || (println("Test Failed: Process failed to exit: \n", read(p.out, String)); return false)
     return true
 end
 
@@ -52,20 +50,19 @@ end
 function testBundledSuccessfully_macro(cmd_expr, timeout=10)
     quote
         val = false
-        mv(Pkg.dir(), Pkg.dir()*".bak")  # NOTE: MUST mv() THIS BACK
+        julia_dir = Pkg.Pkg2._pkgroot()
+        mv(julia_dir, julia_dir*".bak")  # NOTE: MUST mv() THIS BACK
         try
             val = testRunAndKillProgramSucceeds($cmd_expr, $timeout)
         catch
         end
-        mv(Pkg.dir()*".bak", Pkg.dir())  # NOTE: MUST RUN THIS LINE IF ABOVE IS RUN
+        mv(julia_dir*".bak", julia_dir)  # NOTE: MUST RUN THIS LINE IF ABOVE IS RUN
         val
     end
 end
 macro testBundledSuccessfully(expr...)
     testBundledSuccessfully_macro(expr...)
 end
-
-if !julia_v07  # Blink and SDL don't yet work on julia v0.7.
 
 # Disabling the SDL tests since Cairo is currently broken in METADATA.
 #@testset "sdl: simple example of binary dependencies" begin
@@ -86,6 +83,11 @@ if !julia_v07  # Blink and SDL don't yet work on julia v0.7.
 # Test that it runs correctly
 @test testRunAndKillProgramSucceeds(`$builddir/HelloBlink.app/Contents/MacOS/blink`)
 # Test that it can run without .julia directory
-@test @testBundledSuccessfully(`$builddir/HelloBlink.app/Contents/MacOS/blink`, 10)
-end
+
+# TODO: This is broken because Blink currently can't be statically compiled
+# https://github.com/JunoLab/Blink.jl/pull/174
+# (It appears to work in this test, but the application does nothing because it errors.)
+#  @test @testBundledSuccessfully(`$builddir/HelloBlink.app/Contents/MacOS/blink`, 10)
+# Replacing with a test_broken so we remember.
+@test_broken false
 end
