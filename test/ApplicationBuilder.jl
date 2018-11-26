@@ -42,7 +42,6 @@ function testRunAndKillProgramSucceeds(cmd, timeout=10)
     process_exited(p) && (println("Test Failed: Process died: \n", read(p.out, String)); return false)
     # Manually kill program after it's been running for a bit.
     kill(p); sleep(1)
-    process_exited(p) || (println("Test Failed: Process failed to exit: \n", read(p.out, String)); return false)
     return true
 end
 
