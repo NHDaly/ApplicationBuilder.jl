@@ -6,7 +6,8 @@ function build_app_bundle(script::String;
 				libraries = String[],
 				builddir = "builddir",
 				appname = "nothing",
-				create_installer = false)
+				create_installer = false, 
+				cpu_target = "x86-64")
 
 
 	# Create build directory
@@ -41,7 +42,7 @@ function build_app_bundle(script::String;
 		println("... done.")
 	end
 
-	build_executable(script, builddir = core_path)
+	build_executable(script, builddir = core_path, cpu_target = cpu_target)
 
     (create_installer && Sys.islinux()) && throw(error("Cannot create installer on Linux"))
 
