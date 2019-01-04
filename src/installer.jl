@@ -1,21 +1,29 @@
 function installer(builddir; name = "nothing", 
-				license = "$JULIA_HOME/../License.md")
-
+					license = joinpath(Sys.BINDIR, "..", "License.md"),
+					icon = download("https://github.com/JuliaLang/julia/blob/master/contrib/windows/julia.ico", 
+						joinpath(tempdir(), "julia.ico")))
 	# check = success(`makensis`) 
 	# !check && throw(ErrorException("NSIS not found in path. Exiting."))
 
 	nsis_commands = """
+	# Modern UI 
+	!include "MUI2.nsh"
+
 	# set the name of the installer
-	Outfile "$(name)_Installer.exe" 
+	Name "$(name)"
+	Outfile "$(name)-x64.exe" 
 
 	# Default install directory
 	InstallDir "\$LOCALAPPDATA"
 
-	Page license
-	Page directory
-	Page instfiles
+	!insertmacro MUI_PAGE_WELCOME
+	!insertmacro MUI_PAGE_LICENSE "$(license)"
+  	# !insertmacro MUI_PAGE_COMPONENTS
+  	!insertmacro MUI_PAGE_DIRECTORY
+  	!insertmacro MUI_PAGE_INSTFILES
+  	!insertmacro MUI_PAGE_FINISH
 
-	LicenseData "$license"
+  	!insertmacro MUI_LANGUAGE "English"
 
 	# create a default section.
 	Section "Install"
@@ -23,7 +31,9 @@ function installer(builddir; name = "nothing",
 		SetOutPath "$(joinpath("\$INSTDIR", name))"
 		File /nonfatal /a /r "$builddir"
 
-		CreateShortcut "$(joinpath("\$INSTDIR", name, "$name.lnk"))" "$(joinpath(builddir, "core", "blink.exe"))"
+		CreateShortcut "$(joinpath("\$INSTDIR", name, "$(name).lnk"))" "$(joinpath("\$INSTDIR", name, name, "core", "$(name).exe"))" "" "$(icon)" 0
+		CreateShortcut "$(joinpath("\$DESKTOP", "$(name).lnk"))" "$(joinpath("\$INSTDIR", name, name, "core", "$(name).exe"))" "" "$(icon)" 0
+
 
 	SectionEnd
 	"""
