@@ -132,7 +132,7 @@ function build_app_bundle(juliaprog_main;
             println("WARNING: autosnoop is overwriting user-specified snoopfile.")
         end
         snoopfile = "$builddir/$appname-snoopfile.jl"
-        write(snoopfile, """include("$(abspath("$juliaprog_main"))");  julia_main([""]); """)
+        write(snoopfile, """Base.include(@__MODULE__, "$(abspath("$juliaprog_main"))");  julia_main([""]); """)
     end
 
     # When Apple launches an app, it sets the current-working-directory to homedir.
@@ -141,7 +141,7 @@ function build_app_bundle(juliaprog_main;
     utils_injection_file = "$launcherDir/applicationbuilderutils.jl"
     write(utils_injection_file,
         """
-            include("$(abspath(juliaprog_main))")
+            Base.include(@__MODULE__, "$(abspath(juliaprog_main))")
         """*raw"""
             Base.@ccallable function cd_to_bundle_resources()::Nothing
                 full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
