@@ -31,6 +31,7 @@ function build_app_bundle(juliaprog_main;
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
         snoopfile = nothing, autosnoop = false, commandline_app = false,
+        cpu_target="x86-64",
     )
 
     builddir = abspath(builddir)
@@ -163,7 +164,8 @@ function build_app_bundle(juliaprog_main;
         # Compile executable and copy julia libs to $launcherDir.
         PackageCompiler.build_executable(utils_injection_file, binary_name, custom_program_c;
                 builddir=launcherDir, verbose=verbose, optimize="3",
-                snoopfile=snoopfile, debug="0", cpu_target="x86-64",
+                snoopfile=snoopfile, debug="0", cpu_target=cpu_target,
+                compiled_modules="yes",
                 cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
     end
 
