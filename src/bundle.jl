@@ -6,7 +6,12 @@ function build_app_bundle(script::String;
 				libraries = String[],
 				builddir = "builddir",
 				appname = "nothing",
-				create_installer = false)
+				create_installer = false, 
+				cpu_target = "x86-64",
+				icns_file = download("https://github.com/JuliaLang/julia/blob/master/contrib/windows/julia.ico", 
+						joinpath(tempdir(), "julia.ico")), 
+				verbose = false, 
+				snoopfile = nothing)
 
 
 	# Create build directory
@@ -41,12 +46,12 @@ function build_app_bundle(script::String;
 		println("... done.")
 	end
 
-	build_executable(script, builddir = core_path)
+	build_executable(script, builddir = core_path, cpu_target = cpu_target, snoopfile = snoopfile)
 
     (create_installer && Sys.islinux()) && throw(error("Cannot create installer on Linux"))
 
     if Sys.iswindows()
-        create_installer && installer(builddir, name = appname)
+        create_installer && installer(builddir, name = appname, icon = icns_file)
     end
 
 end
