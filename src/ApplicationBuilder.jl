@@ -11,8 +11,9 @@ include("mac_commandline_app.jl")
 
 """
     build_app_bundle(juliaprog_main;
-        appname, builddir, resources, libraries, verbose, bundle_identifier,
-        app_version, icns_file, certificate, entitlements_file, commandline_app)
+        appname, builddir, binary_name, resources, libraries, verbose, bundle_identifier,
+        app_version, icns_file, certificate, entitlements_file, snoopfile, autosnoop,
+        commandline_app, cpu_target)
 
 Compile `juliaprog_main` into an executable, and bundle it together with all its
 `resources` and `libraries` into an App called `appname`.
@@ -26,7 +27,8 @@ julia> build_app_bundle("main.jl", appname="MyApp", resources=["img.jpg"],
 ```
 """
 function build_app_bundle(juliaprog_main;
-        appname=splitext(basename(juliaprog_main))[1], builddir = "builddir",
+        appname = splitext(basename(juliaprog_main))[1], builddir = "builddir",
+        binary_name = splitext(basename(juliaprog_main))[1],
         resources = String[], libraries = String[], verbose = false,
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
@@ -39,7 +41,6 @@ function build_app_bundle(juliaprog_main;
         bundle_identifier = make_bundle_identifier(appname)
         println("  Using calculated bundle_identifier: '$bundle_identifier'")
     end
-    binary_name = splitext(basename(juliaprog_main))[1]
 
     # ----------- Input sanity checking --------------
 
