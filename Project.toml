@@ -14,8 +14,7 @@ REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 julia = "1"
 
 [extras]
-Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Blink"]
+test = ["Test"]
