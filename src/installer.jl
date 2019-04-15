@@ -1,12 +1,12 @@
-function installer(builddir; name = "nothing", 
+function installer(builddir; name = "nothing",
 				license = "$JULIA_HOME/../License.md")
 
-	# check = success(`makensis`) 
+	# check = success(`makensis`)
 	# !check && throw(ErrorException("NSIS not found in path. Exiting."))
 
 	nsis_commands = """
 	# set the name of the installer
-	Outfile "$(name)_Installer.exe" 
+	Outfile "$(name)_Installer.exe"
 
 	# Default install directory
 	InstallDir "\$LOCALAPPDATA"
@@ -31,7 +31,7 @@ function installer(builddir; name = "nothing",
 	@info "Creating installer at $builddir"
 	nsis_file = joinpath(builddir, "..", "$name.nsi")
 	open(nsis_file, "w") do f
-		write(f, nsis_commands)    
+		write(f, nsis_commands)
 	end
 	run(`makensis $nsis_file`)
 
