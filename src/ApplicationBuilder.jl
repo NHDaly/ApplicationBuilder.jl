@@ -32,47 +32,71 @@ function build_app_bundle(juliaprog_main;
         resources = String[], libraries = String[], verbose = false,
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
-        snoopfile = nothing, autosnoop = false, commandline_app = false,
-        cpu_target="x86-64",
+        snoopfile = nothing, autosnoop = false, cpu_target="x86-64",
+        create_installer = false, commandline_app = false,
     )
-
-    builddir = abspath(builddir)
-    if bundle_identifier == nothing
-        bundle_identifier = make_bundle_identifier(appname)
-        println("  Using calculated bundle_identifier: '$bundle_identifier'")
-    end
 
     # ----------- Input sanity checking --------------
 
+    builddir = abspath(builddir)
+    @static if Sys.isapple()
+        if bundle_identifier == nothing
+            bundle_identifier = make_bundle_identifier(appname)
+            println("  Using calculated bundle_identifier: '$bundle_identifier'")
+        end
+        # Bundle identifier requirements: https://apple.stackexchange.com/a/238381/52530
+        if occursin(r"\s", bundle_identifier) throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
+        if occursin(r"[^A-Za-z0-9-.]", bundle_identifier) throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
+
+    else
+        if commandline_app
+            @warn "Ignore `commandline_app=true` on non-macOS system."
+            commandline_app = false
+        end
+    end
+
+    @static if !Sys.iswindows()
+        if create_installer
+            @warn "Ignoring `create_installer=true` on non-Windows system."
+            create_installer = false
+        end
+    end
+
+
     if !isfile(juliaprog_main) throw(ArgumentError("Cannot build application. No such file '$juliaprog_main'")) end
-    # Bundle identifier requirements: https://apple.stackexchange.com/a/238381/52530
-    if occursin(r"\s", bundle_identifier) throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
-    if occursin(r"[^A-Za-z0-9-.]", bundle_identifier) throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
 
     # ----------- Initialize App ---------------------
-    println("~~~~~~ Creating mac app in \"$builddir/$appname.app\" ~~~~~~~")
+    appext = @static if Sys.isapple() ".app" else "" end
+    appbundle = joinpath(builddir, appname * appext)
+    println("~~~~~~ Creating App bundle in \"$appbundle\" ~~~~~~~")
 
-    appDir="$builddir/$appname.app/Contents"
-
-    launcherDir="$appDir/MacOS"
-    resourcesDir="$appDir/Resources"
-    libsDir="$appDir/Libraries"
+    app_dir, launcher_dir, resources_dir, libs_dir = @static if Sys.isapple()
+        ("$appbundle/Contents",
+        "$appbundle/Contents/MacOS",
+        "$appbundle/Contents/Resources",
+        "$appbundle/Contents/Libraries",)
+    else
+        (appbundle,
+        joinpath(appbundle, "bin"),
+        joinpath(appbundle, "res"),
+        joinpath(appbundle, "lib"),)
+    end
 
     applet_name = nothing
-    if commandline_app
+    if commandline_app  # MacOS only
         # TODO: What if the user specifies Resources that could overwrite
         #  applet resources? (ie Scripts/ or applet.rsrc)
         applet_name = build_commandline_app_bundle(builddir, binary_name, appname, verbose)
     end
 
-    mkpath(launcherDir)
 
     function has_files(files)
         return !isempty(files) && !all(isempty, [strip(f) for f in files])
     end
 
-    mkpath(resourcesDir)  # Always create resources directory (For .icns file)
-    has_files(libraries) && mkpath(libsDir)
+    mkpath(launcher_dir)
+    mkpath(resources_dir)  # Always create resources directory (For .icns file)
+    has_files(libraries) && mkpath(libs_dir)
 
 
     # ----------- Copy user libs & assets -------------
@@ -112,14 +136,14 @@ function build_app_bundle(juliaprog_main;
         for res in resources
             res = clean_file_pattern(res, "-R")
             print("    - $res ...")
-            copy_file_dir_or_glob(res, resourcesDir)
+            copy_file_dir_or_glob(res, resources_dir)
             println("............ done")
         end
         println("  Libraries:")
         for lib in libraries
             lib = clean_file_pattern(lib, "-L")
             print("    - $lib ...")
-            copy_file_dir_or_glob(lib, libsDir)
+            copy_file_dir_or_glob(lib, libs_dir)
             println("............ done")
         end
     end
@@ -139,7 +163,7 @@ function build_app_bundle(juliaprog_main;
     # When Apple launches an app, it sets the current-working-directory to homedir.
     # Therefore, we inject this function definition into the app, and call it from
     # the C driver program.
-    utils_injection_file = "$launcherDir/applicationbuilderutils.jl"
+    utils_injection_file = joinpath(launcher_dir, "applicationbuilderutils.jl")
     write(utils_injection_file,
         """
             Base.include(@__MODULE__, "$(abspath(juliaprog_main))")
@@ -159,24 +183,24 @@ function build_app_bundle(juliaprog_main;
         """)
     custom_program_c = "$(@__DIR__)/program.c"
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
-    withenv("LD_LIBRARY_PATH"=>"$libsDir:$libsDir/julia",
+    withenv("LD_LIBRARY_PATH"=>"$libs_dir:$libs_dir/julia",
             "COMPILING_APPLE_BUNDLE"=>"true") do
         verbose && println("  PackageCompiler.static_julia(...)")
-        # Compile executable and copy julia libs to $launcherDir.
+        # Compile executable and copy julia libs to $launcher_dir.
         PackageCompiler.build_executable(utils_injection_file, binary_name, custom_program_c;
-                builddir=launcherDir, verbose=verbose, optimize="3",
+                builddir=launcher_dir, verbose=verbose, optimize="3",
                 snoopfile=snoopfile, debug="0", cpu_target=cpu_target,
                 compiled_modules="yes",
                 cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
     end
 
-    for b in ["$launcherDir/$binary_name", "$launcherDir/$binary_name.dylib"]
+    for b in ["$launcher_dir/$binary_name", "$launcher_dir/$binary_name.dylib"]
         run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Frameworks/" $b`)
         run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Libraries/" $b`)
     end
 
     # In order to pass Apple's GateKeeper, the App must not reference any external Julia libs.
-    for binary_file in glob("*", launcherDir)
+    for binary_file in glob("*", launcher_dir)
         try
             #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
             external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
@@ -246,7 +270,7 @@ function build_app_bundle(juliaprog_main;
         """
 
     verbose && println(info_plist())
-    write("$appDir/Info.plist", info_plist());
+    write("$app_dir/Info.plist", info_plist());
 
     # Copy Julia icons
     julia_app_resources_dir() = joinpath(Sys.BINDIR, "..","..")
@@ -255,7 +279,7 @@ function build_app_bundle(juliaprog_main;
         verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
     end
     if isfile(icns_file)
-        cp(icns_file, "$resourcesDir/$appname.icns", force=true);
+        cp(icns_file, "$resources_dir/$appname.icns", force=true);
     else
         @warn "Skipping nonexistent icons file: '$icns_file'"
     end
@@ -271,25 +295,30 @@ function build_app_bundle(juliaprog_main;
         files = glob(file, path)
         if !isempty(files) run(`rm -r $(files)`) end
     end
-    delete_if_present("*.ji",launcherDir)
-    delete_if_present("*.o",launcherDir)
+    delete_if_present("*.ji",launcher_dir)
+    delete_if_present("*.o",launcher_dir)
 
     # Remove debug .dylib libraries and any precompiled .ji's
-    delete_if_present("*.dSYM",libsDir)
-    delete_if_present("*.dSYM","$libsDir/julia")
-    delete_if_present("*.backup","$libsDir/julia")
-    delete_if_present("*.ji","$libsDir/julia")
-    delete_if_present("*.o","$libsDir/julia")
+    delete_if_present("*.dSYM",libs_dir)
+    delete_if_present("*.dSYM","$libs_dir/julia")
+    delete_if_present("*.backup","$libs_dir/julia")
+    delete_if_present("*.ji","$libs_dir/julia")
+    delete_if_present("*.o","$libs_dir/julia")
 
     if certificate != nothing
         println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
-        sign_application_libs(launcherDir, certificate)
+        sign_application_libs(launcher_dir, certificate)
         if entitlements_file != nothing
-            set_entitlements("$launcherDir/$binary_name", certificate, entitlements_file)
+            set_entitlements("$launcher_dir/$binary_name", certificate, entitlements_file)
         end
     end
 
-    println("~~~~~~ Done building '$builddir/$appname.app'! ~~~~~~~")
+    if Sys.iswindows()
+        create_installer && win_installer(builddir, name = appname)
+    end
+
+
+    println("~~~~~~ Done building '$appbundle'! ~~~~~~~")
     return 0
 end
 
