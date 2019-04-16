@@ -3,7 +3,7 @@ language: julia
 
 os:
   - osx
-  #- linux  # TODO: Enable Linux
+  - linux
 
 julia:
   - 1.0
