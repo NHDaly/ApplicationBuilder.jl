@@ -15,6 +15,11 @@ julia:
 #   allow_failures:
 #   - julia: nightly
 
+# Because we don't build all branches, manualy add a trigger to always build master.
+branches:
+  only:
+  - master
+
 notifications:
   email: false
 
