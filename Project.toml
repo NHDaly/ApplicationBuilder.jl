@@ -1,0 +1,20 @@
+name = "ApplicationBuilder"
+uuid = "f9309374-59cc-5ff5-a120-e3e470a57b4a"
+authors = ["Nathan Daly <nhdaly@gmail.com>", "Ranjan Anantharaman <benditlikeranjan@gmail.com>"]
+version = "0.4.0"
+
+[deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
+PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
