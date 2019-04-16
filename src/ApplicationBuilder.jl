@@ -303,11 +303,7 @@ end
 end  # isapple
 
 @static if Sys.islinux() || Sys.iswindows()
-	include("bundle.jl")
-end
-
-@static if Sys.iswindows()
-    include("installer.jl")
+    include("bundle.jl")
 end
 
 end  # module
