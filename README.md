@@ -1,5 +1,6 @@
 # Julia Application Builder
-[![Build Status](https://travis-ci.org/NHDaly/ApplicationBuilder.jl.svg?branch=master)](https://travis-ci.org/NHDaly/ApplicationBuilder.jl) [![Coverage Status](https://coveralls.io/repos/github/NHDaly/ApplicationBuilder.jl/badge.svg?branch=master)](https://coveralls.io/github/NHDaly/ApplicationBuilder.jl?branch=master)
+[![Travis Build Status](https://travis-ci.org/NHDaly/ApplicationBuilder.jl.svg?branch=master)](https://travis-ci.org/NHDaly/ApplicationBuilder.jl) [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/oy9pnimmic9i6qso?svg=true)](https://ci.appveyor.com/project/NHDaly/applicationbuilder-jl)
+ [![Coverage Status](https://coveralls.io/repos/github/NHDaly/ApplicationBuilder.jl/badge.svg?branch=master)](https://coveralls.io/github/NHDaly/ApplicationBuilder.jl?branch=master)
 
 Turn your julia program into a standalone, distributable, statically-compiled "App"!
 
