@@ -36,12 +36,12 @@ end
         end
 
         mkpath(joinpath(d, "b"))
-        copy_file_dir_or_glob("$d/a/*.txt", "$d/b")
+        ApplicationBuilder.copy_file_dir_or_glob("$d/a/*.txt", "$d/b")
         @test length(readdir(joinpath(d,"b"))) == 5
 
         rm(joinpath(d, "b"), force=true, recursive=true)
         mkpath(joinpath(d, "b"))
-        copy_file_dir_or_glob("$(relpath(d))/a", "$d/b")
+        ApplicationBuilder.copy_file_dir_or_glob("$(relpath(d))/a", "$d/b")
         @test length(readdir(joinpath(d,"b"))) == 1
         @test length(readdir(joinpath(d,"b","a"))) == 10
     end

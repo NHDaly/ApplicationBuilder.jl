@@ -4,14 +4,10 @@ using Glob, PackageCompiler
 
 export build_app_bundle
 
-@static if Sys.islinux() || Sys.iswindows()
-    include("bundle.jl")
-end
-
 @static if Sys.isapple()
-
-include("sign_mac_app.jl")
-include("mac_commandline_app.jl")
+    include("sign_mac_app.jl")
+    include("mac_commandline_app.jl")
+end
 
 """
     build_app_bundle(juliaprog_main;
@@ -150,7 +146,7 @@ function build_app_bundle(juliaprog_main;
         """*raw"""
             Base.@ccallable function cd_to_bundle_resources()::Nothing
                 full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
-                if Sys.isapple()
+                @static if Sys.isapple()
                     m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
                     if m != nothing
                         resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
@@ -162,6 +158,7 @@ function build_app_bundle(juliaprog_main;
             precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
         """)
     custom_program_c = "$(@__DIR__)/program.c"
+    cc_flags = Sys.isapple() ? `-mmacosx-version-min=10.10 -headerpad_max_install_names` : nothing
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv("LD_LIBRARY_PATH"=>"$libs_dir:$libs_dir/julia",
             "COMPILING_APPLE_BUNDLE"=>"true") do
@@ -171,132 +168,131 @@ function build_app_bundle(juliaprog_main;
                 builddir=launcher_dir, verbose=verbose, optimize="3",
                 snoopfile=snoopfile, debug="0", cpu_target=cpu_target,
                 compiled_modules="yes",
-                cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`)
+                cc_flags=cc_flags)
     end
 
-    for b in ["$launcher_dir/$binary_name", "$launcher_dir/$binary_name.dylib"]
-        run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Frameworks/" $b`)
-        run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Libraries/" $b`)
-    end
+    @static if Sys.isapple()
+        for b in ["$launcher_dir/$binary_name", "$launcher_dir/$binary_name.dylib"]
+            run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Frameworks/" $b`)
+            run_verbose(verbose, `install_name_tool -add_rpath "@executable_path/../Libraries/" $b`)
+        end
 
-    # In order to pass Apple's GateKeeper, the App must not reference any external Julia libs.
-    for binary_file in glob("*", launcher_dir)
-        try
-            #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
-            external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
-                 `grep $(dirname(Sys.BINDIR))`,  # filter julia lib deps
-                 `sed 's/\s*path//'`, # remove leading "  path"
-                 `sed 's/(.*)$//'`)) # remove trailing parens
-            for line in external_julia_deps
-                path = strip(line)
-                run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
+        # In order to pass Apple's GateKeeper, the App must not reference any external Julia libs.
+        for binary_file in glob("*", launcher_dir)
+            try
+                #  an example output line from otool: "         path /Applications/Dev Apps/Julia-0.6.app/Contents/Resources/julia/lib (offset 12)"
+                external_julia_deps = readlines(pipeline(`otool -l $binary_file`,
+                     `grep $(dirname(Sys.BINDIR))`,  # filter julia lib deps
+                     `sed 's/\s*path//'`, # remove leading "  path"
+                     `sed 's/(.*)$//'`)) # remove trailing parens
+                for line in external_julia_deps
+                    path = strip(line)
+                    run_verbose(verbose, `install_name_tool -delete_rpath "$path" $binary_file`)
+                end
+            catch
             end
-        catch
-        end
-        # Also need to strip any non-x86 architectures to make Apple happy.
-        # (It looks like this only affects libgcc_s.1.dylib.)
-        try
-            if success(pipeline(`file $binary_file`, `grep 'i386'`))
-                run_verbose(verbose, `lipo $binary_file -thin x86_64 -output $binary_file`)
+            # Also need to strip any non-x86 architectures to make Apple happy.
+            # (It looks like this only affects libgcc_s.1.dylib.)
+            try
+                if success(pipeline(`file $binary_file`, `grep 'i386'`))
+                    run_verbose(verbose, `lipo $binary_file -thin x86_64 -output $binary_file`)
+                end
+            catch
             end
-        catch
         end
-    end
 
-    # ---------- Create Info.plist to tell it where to find stuff! ---------
-    # This lets you have a different app name from your juliaprog_main.
-    println("~~~~~~ Generating 'Info.plist' for '$bundle_identifier'... ~~~~~~~")
+        # ---------- Create Info.plist to tell it where to find stuff! ---------
+        # This lets you have a different app name from your juliaprog_main.
+        println("~~~~~~ Generating 'Info.plist' for '$bundle_identifier'... ~~~~~~~")
 
-    info_plist() = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-        	<key>CFBundleAllowMixedLocalizations</key>
-        	<true/>
-        	<key>CFBundleDevelopmentRegion</key>
-        	<string>en</string>
-        	<key>CFBundleDisplayName</key>
-        	<string>$appname</string>
-        	<key>CFBundleExecutable</key>
-        	<string>$(commandline_app ? applet_name : binary_name)</string>
-        	<key>CFBundleIconFile</key>
-        	<string>$appname.icns</string>
-        	<key>CFBundleIdentifier</key>
-        	<string>$bundle_identifier</string>
-            <key>CFBundleInfoDictionaryVersion</key>
-            <string>6.0</string>
-        	<key>CFBundleName</key>
-        	<string>$appname</string>
-        	<key>CFBundlePackageType</key>
-        	<string>APPL</string>
-        	<key>CFBundleShortVersionString</key>
-        	<string>$app_version</string>
-        	<key>CFBundleVersion</key>
-        	<string>$app_version</string>
-        	<key>NSHighResolutionCapable</key>
-            <string>YES</string>
-        	<key>LSMinimumSystemVersionByArchitecture</key>
-        	<dict>
-        		<key>x86_64</key>
-        		<string>10.10</string>
-        	</dict>
-        	<key>LSRequiresCarbon</key>
-        	<true/>
-        	<key>NSHumanReadableCopyright</key>
-        	<string>© 2018 $bundle_identifier </string>
-        </dict>
-        </plist>
-        """
+        info_plist() = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+            	<key>CFBundleAllowMixedLocalizations</key>
+            	<true/>
+            	<key>CFBundleDevelopmentRegion</key>
+            	<string>en</string>
+            	<key>CFBundleDisplayName</key>
+            	<string>$appname</string>
+            	<key>CFBundleExecutable</key>
+            	<string>$(commandline_app ? applet_name : binary_name)</string>
+            	<key>CFBundleIconFile</key>
+            	<string>$appname.icns</string>
+            	<key>CFBundleIdentifier</key>
+            	<string>$bundle_identifier</string>
+                <key>CFBundleInfoDictionaryVersion</key>
+                <string>6.0</string>
+            	<key>CFBundleName</key>
+            	<string>$appname</string>
+            	<key>CFBundlePackageType</key>
+            	<string>APPL</string>
+            	<key>CFBundleShortVersionString</key>
+            	<string>$app_version</string>
+            	<key>CFBundleVersion</key>
+            	<string>$app_version</string>
+            	<key>NSHighResolutionCapable</key>
+                <string>YES</string>
+            	<key>LSMinimumSystemVersionByArchitecture</key>
+            	<dict>
+            		<key>x86_64</key>
+            		<string>10.10</string>
+            	</dict>
+            	<key>LSRequiresCarbon</key>
+            	<true/>
+            	<key>NSHumanReadableCopyright</key>
+            	<string>© 2018 $bundle_identifier </string>
+            </dict>
+            </plist>
+            """
 
-    verbose && println(info_plist())
-    write("$app_dir/Info.plist", info_plist());
+        verbose && println(info_plist())
+        write("$app_dir/Info.plist", info_plist());
 
-    # Copy Julia icons
-    julia_app_resources_dir() = joinpath(Sys.BINDIR, "..","..")
-    if (icns_file == nothing)
-        icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
-        verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
-    end
-    if isfile(icns_file)
-        cp(icns_file, "$resources_dir/$appname.icns", force=true);
-    else
-        @warn "Skipping nonexistent icons file: '$icns_file'"
-    end
-
-    # --------------- CLEAN UP before distributing ---------------
-    println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
-
-    # Delete the file we added to inject code.
-    rm(utils_injection_file)
-
-    # Delete the tmp build files
-    function delete_if_present(file, path)
-        files = glob(file, path)
-        if !isempty(files) run(`rm -r $(files)`) end
-    end
-    delete_if_present("*.ji",launcher_dir)
-    delete_if_present("*.o",launcher_dir)
-
-    # Remove debug .dylib libraries and any precompiled .ji's
-    delete_if_present("*.dSYM",libs_dir)
-    delete_if_present("*.dSYM","$libs_dir/julia")
-    delete_if_present("*.backup","$libs_dir/julia")
-    delete_if_present("*.ji","$libs_dir/julia")
-    delete_if_present("*.o","$libs_dir/julia")
-
-    if certificate != nothing
-        println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
-        sign_application_libs(launcher_dir, certificate)
-        if entitlements_file != nothing
-            set_entitlements("$launcher_dir/$binary_name", certificate, entitlements_file)
+        # Copy Julia icons
+        julia_app_resources_dir() = joinpath(Sys.BINDIR, "..","..")
+        if (icns_file == nothing)
+            icns_file = joinpath(julia_app_resources_dir(),"julia.icns")
+            verbose && println("Attempting to copy default icons from Julia.app: $icns_file")
         end
-    end
+        if isfile(icns_file)
+            cp(icns_file, "$resources_dir/$appname.icns", force=true);
+        else
+            @warn "Skipping nonexistent icons file: '$icns_file'"
+        end
 
-    if Sys.iswindows()
+        # --------------- CLEAN UP before distributing ---------------
+        println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
+
+        # Delete the file we added to inject code.
+        rm(utils_injection_file)
+
+        # Delete the tmp build files
+        function delete_if_present(file, path)
+            files = glob(file, path)
+            if !isempty(files) run(`rm -r $(files)`) end
+        end
+        delete_if_present("*.ji",launcher_dir)
+        delete_if_present("*.o",launcher_dir)
+
+        # Remove debug .dylib libraries and any precompiled .ji's
+        delete_if_present("*.dSYM",libs_dir)
+        delete_if_present("*.dSYM","$libs_dir/julia")
+        delete_if_present("*.backup","$libs_dir/julia")
+        delete_if_present("*.ji","$libs_dir/julia")
+        delete_if_present("*.o","$libs_dir/julia")
+
+        if certificate != nothing
+            println("~~~~~~ Signing the binary and all libraries ~~~~~~~")
+            sign_application_libs(launcher_dir, certificate)
+            if entitlements_file != nothing
+                set_entitlements("$launcher_dir/$binary_name", certificate, entitlements_file)
+            end
+        end
+    elseif Sys.iswindows()
         create_installer && win_installer(builddir, name = appname)
     end
-
 
     println("~~~~~~ Done building '$appbundle'! ~~~~~~~")
     return 0
@@ -308,8 +304,6 @@ function make_bundle_identifier(appname)
     cleanapp = replace(lowercase(appname), cleanregex => "")
     "com.$cleanuser.$cleanapp"
 end
-
-end  # isapple
 
 function copy_file_dir_or_glob(pattern, destdir)
     if isfile(pattern)  # Copy the file to destdir
