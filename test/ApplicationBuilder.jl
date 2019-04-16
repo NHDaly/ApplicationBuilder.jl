@@ -13,6 +13,40 @@ builddir = mktempdir()
           )
 end
 
+@testset "copy files Utils" begin
+    @testset "clean_file_pattern" begin
+        @test ApplicationBuilder.clean_file_pattern("/a/b/c", "") == "/a/b/c"
+        @test ApplicationBuilder.clean_file_pattern(" ~/tmp/a.txt ", "") == "$(homedir())/tmp/a.txt"
+        @test ApplicationBuilder.clean_file_pattern("Hello World", "") == "Hello World"
+        @test_throws ArgumentError ApplicationBuilder.clean_file_pattern(" ", "-R")
+        try
+            ApplicationBuilder.clean_file_pattern(" ", "-R")
+        catch e
+            @test occursin(r".*-R.*", e.msg)
+        end
+    end
+    @testset "copy_file_dir_or_glob" begin
+        d = mkpath(joinpath(mktempdir(), "d"))
+        mkpath(joinpath(d, "a"))
+        for i in 1:5
+            write(joinpath(d, "a", "f$i.txt"), rand(1:100))
+        end
+        for i in 1:5
+            write(joinpath(d, "a", "f$i.bi"), rand(1:100))
+        end
+
+        mkpath(joinpath(d, "b"))
+        copy_file_dir_or_glob("$d/a/*.txt", "$d/b")
+        @test length(readdir(joinpath(d,"b"))) == 5
+
+        rm(joinpath(d, "b"), force=true, recursive=true)
+        mkpath(joinpath(d, "b"))
+        copy_file_dir_or_glob("$(relpath(d))/a", "$d/b")
+        @test length(readdir(joinpath(d,"b"))) == 1
+        @test length(readdir(joinpath(d,"b","a"))) == 10
+    end
+end
+
 @testset "HelloWorld.app" begin
     @test 0 == include("build_examples/hello.jl")
     @test isdir("$builddir/HelloWorld.app")

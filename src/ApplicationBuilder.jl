@@ -4,6 +4,10 @@ using Glob, PackageCompiler
 
 export build_app_bundle
 
+@static if Sys.islinux() || Sys.iswindows()
+    include("bundle.jl")
+end
+
 @static if Sys.isapple()
 
 include("sign_mac_app.jl")
@@ -100,7 +104,7 @@ function build_app_bundle(juliaprog_main;
 
 
     # ----------- Copy user libs & assets -------------
-    run_verbose(verbose, cmd) = (verbose && println("    julia> run($cmd)") ; run(cmd))
+    run_verbose(verbose, cmd::Cmd) = (verbose && println("    julia> run($cmd)") ; run(cmd))
 
     if has_files(libraries) || has_files(resources)
         # Copy assets and libs early so they're available during compilation.
@@ -108,30 +112,6 @@ function build_app_bundle(juliaprog_main;
 
         println("~~~~~~ Copying user-specified libraries & resources to bundle... ~~~~~~~")
 
-        function copy_file_dir_or_glob(pattern, dest)
-            if isfile(pattern)
-                run_verbose(verbose, `cp -f $pattern $dest/`) # Copy the file to dest
-            elseif isdir(pattern)
-              run_verbose(verbose, `cp -rf $pattern $dest/`) # Copy the entire *dir* (not its contents) to dest.
-            elseif pattern[1] == '/'
-                files = glob(pattern[2:end], pattern[1:1])
-                run_verbose(verbose, `cp -rf $files $dest/`) # Copy the specified glob pattern to dest.
-            elseif !isempty(glob(pattern))
-                run_verbose(verbose, `cp -rf $(glob(pattern)) $dest/`) # Copy the specified glob pattern to dest.
-            else
-                @warn "Skipping unknown file '$pattern'!"
-            end
-        end
-
-        function clean_file_pattern(pattern, errorMsg_fileCmd)
-            clean_pattern = strip(pattern)
-            if isempty(clean_pattern)
-                throw(ArgumentError("ERROR: $errorMsg_fileCmd '$pattern' must not be empty."))
-            elseif clean_pattern[1] == '~'
-                clean_pattern = homedir() * pattern[2:end]
-            end
-            return clean_pattern
-        end
         println("  Resources:")
         for res in resources
             res = clean_file_pattern(res, "-R")
@@ -331,8 +311,34 @@ end
 
 end  # isapple
 
-@static if Sys.islinux() || Sys.iswindows()
-    include("bundle.jl")
+function copy_file_dir_or_glob(pattern, destdir)
+    if isfile(pattern)  # Copy the file to destdir
+        cp(pattern, joinpath(destdir, basename(pattern)), force=true)
+    elseif isdir(pattern)  # Copy the entire *dir* (not its contents) to destdir.
+        cp(pattern, joinpath(destdir, basename(pattern)), force=true)
+    # if not a file or a directory, assume it's a glob.
+    elseif pattern[1] == '/'  # Glob.glob can't handle globs starting with '/'
+        files = glob(pattern[2:end], pattern[1:1])
+        for file in files
+            cp(file, joinpath(destdir, basename(file)), force=true)
+        end
+    elseif !isempty(pattern)  # Copy the specified glob pattern file[s] to destdir.
+        for file in glob(pattern)
+            cp(file, joinpath(destdir, basename(file)), force=true)
+        end
+    else
+        @warn "Skipping unknown file '$pattern'!"
+    end
+end
+
+function clean_file_pattern(pattern, errorMsg_fileCmd)
+    clean_pattern = strip(pattern)
+    if isempty(clean_pattern)
+        throw(ArgumentError("ERROR: $errorMsg_fileCmd '$pattern' must not be empty."))
+    elseif clean_pattern[1] == '~'
+        clean_pattern = homedir() * clean_pattern[2:end]
+    end
+    return clean_pattern
 end
 
 end  # module
