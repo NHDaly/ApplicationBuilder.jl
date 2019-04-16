@@ -1,22 +1,28 @@
 if Sys.iswindows()
-	include("installer.jl")
+	include("win-installer.jl")
 end
-function build_app_bundle(script::String;
+TODO = nothing
+function build_app_bundle(juliaprog_main::String;
 				resources = String[],
 				libraries = String[],
 				builddir = "builddir",
 				appname = "nothing",
+                binary_name = splitext(basename(juliaprog_main))[1],
+                verbose = false,
+                cpu_target = nothing,
+                commandline_app = TODO,
+                snoopfile = nothing, autosnoop = TODO,
 				create_installer = false)
 
 
 	# Create build directory
-	script = abspath(script)
-	base_path = dirname(script)
-	builddir = joinpath(base_path, builddir, appname)
+	juliaprog_main = abspath(juliaprog_main)
+    builddir = abspath(builddir)
+	builddir = joinpath(builddir, appname)
 	@info "Building at path $builddir"
 	mkpath(builddir)
 
-	core_path = joinpath(builddir, "core")
+	core_path = joinpath(builddir, "bin")
 	lib_path = joinpath(builddir, "lib")
 	res_path = joinpath(builddir, "res")
 
@@ -41,12 +47,22 @@ function build_app_bundle(script::String;
 		println("... done.")
 	end
 
-	build_executable(script, builddir = core_path)
+    # ----------- Compile a binary ---------------------
+    # Compile the binary right into the app.
+    println("~~~~~~ Compiling a binary from '$juliaprog_main'... ~~~~~~~")
 
-    (create_installer && Sys.islinux()) && throw(error("Cannot create installer on Linux"))
+    PackageCompiler.build_executable(juliaprog_main, binary_name;
+            builddir=core_path, verbose=verbose, optimize="3",
+            snoopfile=snoopfile, debug="0", cpu_target=cpu_target,
+            compiled_modules="yes",
+            #cc_flags=`-mmacosx-version-min=10.10 -headerpad_max_install_names`,
+            )
+
+    (create_installer && Sys.islinux()) && @warn("Cannot create installer on Linux")
 
     if Sys.iswindows()
-        create_installer && installer(builddir, name = appname)
+        create_installer && win_installer(builddir, name = appname)
     end
 
+    return 0
 end

@@ -5,5 +5,5 @@ using ApplicationBuilder
 @isdefined(builddir) || (builddir="builddir")
 
 build_app_bundle(joinpath(@__DIR__,"..","..","examples","commandline_hello.jl"),
-                 appname="hello",
+                 appname="hello", binary_name="hello",
                  commandline_app=true, builddir=builddir)

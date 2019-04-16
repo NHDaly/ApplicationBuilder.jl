@@ -1,4 +1,4 @@
-function installer(builddir; name = "nothing",
+function win_installer(builddir; name = "nothing",
 				license = "$JULIA_HOME/../License.md")
 
 	# check = success(`makensis`)
