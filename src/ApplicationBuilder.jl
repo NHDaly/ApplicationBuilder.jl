@@ -133,7 +133,7 @@ function build_app_bundle(juliaprog_main;
             println("WARNING: autosnoop is overwriting user-specified snoopfile.")
         end
         snoopfile = "$builddir/$appname-snoopfile.jl"
-        write(snoopfile, """Base.include(@__MODULE__, "$(abspath("$juliaprog_main"))");  julia_main([""]); """)
+        write(snoopfile, """Base.include(@__MODULE__, raw"$(abspath("$juliaprog_main"))");  julia_main([""]); """)
     end
 
     # When Apple launches an app, it sets the current-working-directory to homedir.
@@ -142,7 +142,7 @@ function build_app_bundle(juliaprog_main;
     utils_injection_file = joinpath(launcher_dir, "applicationbuilderutils.jl")
     write(utils_injection_file,
         """
-            Base.include(@__MODULE__, "$(abspath(juliaprog_main))")
+            Base.include(@__MODULE__, raw"$(abspath(juliaprog_main))")
         """*raw"""
             Base.@ccallable function cd_to_bundle_resources()::Nothing
                 full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
@@ -152,8 +152,12 @@ function build_app_bundle(juliaprog_main;
                         resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
                         cd(resources_dir)
                     end
-                    println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
+                else
+                    # TODO: Should we do similar verification on linux/windows? Maybe use splitpath()?
+                    resources_dir = joinpath(dirname(dirname(full_binary_name)), "res")
+                    cd(resources_dir)
                 end
+                println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
             end
             precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
         """)
