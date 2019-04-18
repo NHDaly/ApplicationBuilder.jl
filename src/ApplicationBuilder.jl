@@ -194,9 +194,20 @@ function build_app_bundle(juliaprog_main;
         run(`$(Base.julia_cmd()) -e "using Pkg;
                                    Pkg.activate(raw\"$(user_project)\");
                                    Pkg.instantiate()"`)
-        #pkg"activate --shared"
-        #Pkg.instantiate()
-        #Pkg.activate(user_project)
+        # And set all the paths to relative paths
+        resources_dir = "/Users/nathan.daly/.julia/dev/ApplicationBuilder/builddir/DuckDBApp.app/Contents/Resources"
+        for (root, dirs, files) in walkdir("$resources_dir/dotjulia/packages")
+            if endswith(root, "/deps") || endswith(root, "/deps/")
+                if "deps.jl" in files
+                    f = joinpath(root, "deps.jl")
+                    s = read(f, String)
+                    s = replace(s, "relpath(@__FILE__)"=>"@__FILE__")  # So we don't grow relpath(relpath(...)) every build
+                    s = replace(s, "@__FILE__"=>"relpath(@__FILE__)")
+                    write(f, s)
+                end
+            end
+        end
+
 
         verbose && println("  PackageCompiler.static_julia(...)")
         # Compile executable and copy julia libs to $launcher_dir.
