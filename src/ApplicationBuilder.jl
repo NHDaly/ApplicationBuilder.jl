@@ -1,6 +1,7 @@
 module ApplicationBuilder
 
 using Glob, PackageCompiler
+using Pkg
 
 export build_app_bundle
 
@@ -142,10 +143,23 @@ function build_app_bundle(juliaprog_main;
     utils_injection_file = joinpath(launcher_dir, "applicationbuilderutils.jl")
     write(utils_injection_file,
         """
+            ## Set up relative loadpaths
+            #@static if Sys.islinux()  # TODO: windows?
+            #    push!(Base.DL_LOAD_PATH, raw"$launcher_dir")
+            #    @show Base.DL_LOAD_PATH
+            #end
+
             Base.include(@__MODULE__, raw"$(abspath(juliaprog_main))")
         """*raw"""
             Base.@ccallable function cd_to_bundle_resources()::Nothing
                 full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
+
+                # NVM we're cd'ing instead
+                ## Set up relative loadpaths
+                #@static if Sys.islinux()  # TODO: windows?
+                #    push!(Base.DL_LOAD_PATH, dirname(PROGRAM_FILE))
+                #end
+
                 @static if Sys.isapple()
                     m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
                     if m != nothing
@@ -163,9 +177,27 @@ function build_app_bundle(juliaprog_main;
         """)
     custom_program_c = "$(@__DIR__)/program.c"
     cc_flags = Sys.isapple() ? `-mmacosx-version-min=10.10 -headerpad_max_install_names` : nothing
+
+    # TODO: Maybe warn if this is using the default Shared environment since we may
+    # install a lot of crap.
+    # Maybe can detect if we use Base.ACTIVE_PROJECT[] instead (nothing if not set)?
+    # Or maybe just require the user to specify it as an input param?
+    user_project = Base.active_project()
+    @show user_project
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
-    withenv("LD_LIBRARY_PATH"=>"$libs_dir:$libs_dir/julia",
-            "COMPILING_APPLE_BUNDLE"=>"true") do
+    withenv(#"LD_LIBRARY_PATH"=>"$libs_dir:$libs_dir/julia",
+            "COMPILING_APPLE_BUNDLE"=>"true",
+            "JULIA_DEPOT_PATH"=>"$resources_dir/dotjulia",
+            ) do
+
+        # Instantiate the user's manifest inside the app
+        run(`$(Base.julia_cmd()) -e "using Pkg;
+                                   Pkg.activate(raw\"$(user_project)\");
+                                   Pkg.instantiate()"`)
+        #pkg"activate --shared"
+        #Pkg.instantiate()
+        #Pkg.activate(user_project)
+
         verbose && println("  PackageCompiler.static_julia(...)")
         # Compile executable and copy julia libs to $launcher_dir.
         PackageCompiler.build_executable(utils_injection_file, binary_name, custom_program_c;

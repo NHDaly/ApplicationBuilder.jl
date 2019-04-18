@@ -4,6 +4,10 @@
 #include <string.h>
 #include <stdint.h>
 
+// Unix headers (for cd'ing to binary dir)
+#include <libgen.h>
+#include <unistd.h>
+
 // Julia headers (for initialization and gc commands)
 #include "uv.h"
 #include "julia.h"
@@ -21,6 +25,9 @@ extern int julia_main(jl_array_t*);
 // main function (windows UTF16 -> UTF8 argument conversion code copied from julia's ui/repl.c)
 int main(int argc, char *argv[])
 {
+    // FIRST, CD TO BINARY DIRECTORY (so all libs load correctly)
+    chdir(dirname(argv[0]));
+
     int retcode;
     int i;
     uv_setup_args(argc, argv); // no-op on Windows
@@ -49,7 +56,8 @@ int main(int argc, char *argv[])
     }
 
     // Navigate to inside the Appication Bundle before running julia_main
-    cd_to_bundle_resources();
+    // cd_to_bundle_resources();
+    chdir("../Resources");
 
     // call the work function, and get back a value
     retcode = julia_main(ARGS);
