@@ -143,6 +143,15 @@ function build_app_bundle(juliaprog_main;
     utils_injection_file = joinpath(launcher_dir, "applicationbuilderutils.jl")
     write(utils_injection_file,
         """
+            #@eval Base  macro __DIR__()
+            #    __source__.file === nothing && return nothing
+            #    return relpath(dirname(String(__source__.file)), ".")
+            #end
+            #@eval Base macro __FILE__()
+            #    __source__.file === nothing && return nothing
+            #    return relpath(String(__source__.file), ".")
+            #end
+
             ## Set up relative loadpaths
             #@static if Sys.islinux()  # TODO: windows?
             #    push!(Base.DL_LOAD_PATH, raw"$launcher_dir")
@@ -182,7 +191,7 @@ function build_app_bundle(juliaprog_main;
     # install a lot of crap.
     # Maybe can detect if we use Base.ACTIVE_PROJECT[] instead (nothing if not set)?
     # Or maybe just require the user to specify it as an input param?
-    user_project = Base.active_project()
+    user_project = Base.active_project( )
     @show user_project
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
     withenv(#"LD_LIBRARY_PATH"=>"$libs_dir:$libs_dir/julia",
@@ -193,17 +202,27 @@ function build_app_bundle(juliaprog_main;
         # Instantiate the user's manifest inside the app
         run(`$(Base.julia_cmd()) -e "using Pkg;
                                    Pkg.activate(raw\"$(user_project)\");
-                                   Pkg.instantiate()"`)
+                                   Pkg.instantiate();
+                                   # Pkg.build();  # I think instantiate() also builds as needed?
+                                   "`)
+
+        # # Cancelling this because of file permissions errors....
         # And set all the paths to relative paths
-        resources_dir = "/Users/nathan.daly/.julia/dev/ApplicationBuilder/builddir/DuckDBApp.app/Contents/Resources"
+        # TODO: Maybe, even better, i can just redefine the macros for FILE and DIR?
         for (root, dirs, files) in walkdir("$resources_dir/dotjulia/packages")
             if endswith(root, "/deps") || endswith(root, "/deps/")
                 if "deps.jl" in files
                     f = joinpath(root, "deps.jl")
-                    s = read(f, String)
-                    s = replace(s, "relpath(@__FILE__)"=>"@__FILE__")  # So we don't grow relpath(relpath(...)) every build
-                    s = replace(s, "@__FILE__"=>"relpath(@__FILE__)")
-                    write(f, s)
+                    #for f in files
+                        f = joinpath(root, f)
+                        s = read(f, String)
+                        s = replace(s, "relpath(@__FILE__)"=>"@__FILE__")  # So we don't grow relpath(relpath(...)) every build
+                        s = replace(s, "@__FILE__"=>"relpath(@__FILE__)")
+                        s = replace(s, "relpath(@__DIR__)"=>"@__DIR__")  # So we don't grow relpath(relpath(...)) every build
+                        s = replace(s, "@__DIR__"=>"relpath(@__DIR__)")
+                        #try write(f, s) catch end  # TODO: Some packages are read-only for some reason?
+                        write(f, s)
+                    #end
                 end
             end
         end

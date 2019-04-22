@@ -14,35 +14,35 @@
 #      examples/blink.jl "HelloBlink"
 
 using Blink
-
-# In order to distribute this Application, we've copied all its dependencies
-# into the .app bundle via the -R and -L build flags.
-# Now, here, we have to update the Packages that use those dependencies to find
-# them in the right place. These changes take place at compile time. We override
-# the paths to all be relative paths, so that the app bundle can be moved.
-if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
-    println("Overriding Blink dependency paths.")
-    println("Overriding Blink dependency paths.")
-    Core.eval(Blink.AtomShell, :(_electron = "Julia.app/Contents/MacOS/Julia"))
-    Core.eval(Blink.AtomShell, :(mainjs = "main.js"))
-    Core.eval(Blink, :(buzz = "main.html"))
-    Core.eval(Blink, :(resources = Dict("spinner.css" => "res/spinner.css",
-                             "blink.js" => "res/blink.js",
-                             "blink.css" => "res/blink.css",
-                             "reset.css" => "res/reset.css")))
-    # Clear out Blink.__inits__, since it will attempt to evaluate hardcoded paths.
-    # (We've defined all the variables manually, above: `resources` and `port`.)
-    Core.eval(Blink, :(empty!(__inits__)))
-
-    Core.eval(Blink.Mux.HTTP.MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
-
-#    WebSockets = Blink.WebSockets
-#    Core.eval(WebSockets, :(using HttpServer))  # needed to cause @require lines to execute & compile
-#    Core.eval(WebSockets,
-#        :(include(joinpath(Pkg.dir("WebSockets"),"src/HttpServer.jl"))))  # Manually load this from the @requires line.
-
-    println("Done changing dependencies.")
-end
+#
+## In order to distribute this Application, we've copied all its dependencies
+## into the .app bundle via the -R and -L build flags.
+## Now, here, we have to update the Packages that use those dependencies to find
+## them in the right place. These changes take place at compile time. We override
+## the paths to all be relative paths, so that the app bundle can be moved.
+#if get(ENV, "COMPILING_APPLE_BUNDLE", "false") == "true"
+#    println("Overriding Blink dependency paths.")
+#    println("Overriding Blink dependency paths.")
+#    Core.eval(Blink.AtomShell, :(_electron = "Julia.app/Contents/MacOS/Julia"))
+#    Core.eval(Blink.AtomShell, :(mainjs = "main.js"))
+#    Core.eval(Blink, :(buzz = "main.html"))
+#    Core.eval(Blink, :(resources = Dict("spinner.css" => "res/spinner.css",
+#                             "blink.js" => "res/blink.js",
+#                             "blink.css" => "res/blink.css",
+#                             "reset.css" => "res/reset.css")))
+#    # Clear out Blink.__inits__, since it will attempt to evaluate hardcoded paths.
+#    # (We've defined all the variables manually, above: `resources` and `port`.)
+#    Core.eval(Blink, :(empty!(__inits__)))
+#
+#    Core.eval(Blink.Mux.HTTP.MbedTLS, :(const libmbedcrypto = basename(libmbedcrypto)))
+#
+##    WebSockets = Blink.WebSockets
+##    Core.eval(WebSockets, :(using HttpServer))  # needed to cause @require lines to execute & compile
+##    Core.eval(WebSockets,
+##        :(include(joinpath(Pkg.dir("WebSockets"),"src/HttpServer.jl"))))  # Manually load this from the @requires line.
+#
+#    println("Done changing dependencies.")
+#end
 
 # Simple HTML example: "Hello" with an input field to change name being greeted.
 html() = """
@@ -55,8 +55,8 @@ html() = """
  """
 
 function helloFromBlink()
-    # Set Blink port randomly before anything else.
-    Blink.port[] = get(ENV, "BLINK_PORT", rand(2_000:10_000))
+#    # Set Blink port randomly before anything else.
+#    Blink.port[] = get(ENV, "BLINK_PORT", rand(2_000:10_000))
 
     # Create Blink window and load HTML.
     win = Blink.Window(Blink.shell(), Dict(:width=>850)); sleep(5.0)
