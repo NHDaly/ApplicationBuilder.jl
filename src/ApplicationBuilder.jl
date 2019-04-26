@@ -141,26 +141,34 @@ function build_app_bundle(juliaprog_main;
     # the C driver program.
     utils_injection_file = joinpath(launcher_dir, "applicationbuilderutils.jl")
     write(utils_injection_file,
-        """
-            Base.include(@__MODULE__, raw"$(abspath(juliaprog_main))")
-        """*raw"""
-            Base.@ccallable function cd_to_bundle_resources()::Nothing
-                full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
-                @static if Sys.isapple()
-                    m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
-                    if m != nothing
-                        resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
+        raw"""
+            module ApplicationBuilderUtils
+                const g_initial_pwd = fill("")
+                initial_pwd() = g_initial_pwd[]
+
+                Base.@ccallable function cd_to_bundle_resources()::Nothing
+                    g_initial_pwd[] = pwd()
+                    full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
+
+                    @static if Sys.isapple()
+                        m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
+                        if m != nothing
+                            resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
+                            cd(resources_dir)
+                        end
+                    else
+                        # TODO: Should we do similar verification on linux/windows? Maybe use splitpath()?
+                        resources_dir = joinpath(dirname(dirname(full_binary_name)), "res")
                         cd(resources_dir)
                     end
-                else
-                    # TODO: Should we do similar verification on linux/windows? Maybe use splitpath()?
-                    resources_dir = joinpath(dirname(dirname(full_binary_name)), "res")
-                    cd(resources_dir)
+                    println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
                 end
-                println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
+                precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
             end
-            precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
-        """)
+        """ * """
+            Base.include(@__MODULE__, raw"$(abspath(juliaprog_main))")
+        """
+        )
     custom_program_c = "$(@__DIR__)/program.c"
     cc_flags = Sys.isapple() ? `-mmacosx-version-min=10.10 -headerpad_max_install_names` : nothing
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
