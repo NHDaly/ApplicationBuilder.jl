@@ -143,6 +143,7 @@ function build_app_bundle(juliaprog_main;
     write(utils_injection_file,
         raw"""
             module ApplicationBuilderUtils
+                
                 function get_bundle_resources_dir()
                     full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
 
