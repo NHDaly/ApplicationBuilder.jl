@@ -143,25 +143,28 @@ function build_app_bundle(juliaprog_main;
     write(utils_injection_file,
         raw"""
             module ApplicationBuilderUtils
-                const g_initial_pwd = fill("")
-                initial_pwd() = g_initial_pwd[]
-
-                Base.@ccallable function cd_to_bundle_resources()::Nothing
-                    g_initial_pwd[] = pwd()
+                function get_bundle_resources_dir()
                     full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
 
                     @static if Sys.isapple()
                         m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
                         if m != nothing
                             resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
-                            cd(resources_dir)
+                            return resources_dir
+                        else
+                            return pwd()
                         end
                     else
                         # TODO: Should we do similar verification on linux/windows? Maybe use splitpath()?
                         resources_dir = joinpath(dirname(dirname(full_binary_name)), "res")
-                        cd(resources_dir)
+                        return resources_dir
                     end
+                end
+                function cd_to_bundle_resources()
+                    resources_dir = get_bundle_resources_dir()
+                    cd(resources_dir)
                     println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
+                    nothing
                 end
                 precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
             end
