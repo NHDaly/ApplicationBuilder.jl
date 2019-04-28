@@ -80,6 +80,7 @@ function helloFromSDL()
 end
 
 Base.@ccallable function julia_main(args::Vector{String})::Cint
+    Main.ApplicationBuilderUtils.cd_to_bundle_resources()
     helloFromSDL()
     return 0
 end

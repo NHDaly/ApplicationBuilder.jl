@@ -168,6 +168,7 @@ end
 
 
 Base.@ccallable function julia_main(ARGS::Vector{String})::Cint
+    Main.ApplicationBuilderUtils.cd_to_bundle_resources()
     global progressbar = uiNewProgressBar()
     global spinbox = uiNewSpinbox(0, 100)
     global slider = uiNewSlider(0, 100)

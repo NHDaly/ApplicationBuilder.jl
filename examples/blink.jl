@@ -82,6 +82,8 @@ function helloFromBlink()
 end
 
 Base.@ccallable function julia_main(args::Vector{String})::Cint
+    Main.ApplicationBuilderUtils.cd_to_bundle_resources()
+
     # Apparently starting Electron too quickly means the OS doesn't get a
     # chance to find the name of the application...
     sleep(2)

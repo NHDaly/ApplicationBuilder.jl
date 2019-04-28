@@ -158,32 +158,44 @@ function build_app_bundle(juliaprog_main;
             #    @show Base.DL_LOAD_PATH
             #end
 
-            Base.include(@__MODULE__, raw"$(abspath(juliaprog_main))")
         """*raw"""
-            Base.@ccallable function cd_to_bundle_resources()::Nothing
-                full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
+            module ApplicationBuilderUtils
 
-                # NVM we're cd'ing instead
-                ## Set up relative loadpaths
-                #@static if Sys.islinux()  # TODO: windows?
-                #    push!(Base.DL_LOAD_PATH, dirname(PROGRAM_FILE))
-                #end
+                function get_bundle_resources_dir()
+                    full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
 
-                @static if Sys.isapple()
-                    m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
-                    if m != nothing
-                        resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
-                        cd(resources_dir)
+                    # NVM we're cd'ing instead
+                    ## Set up relative loadpaths
+                    #@static if Sys.islinux()  # TODO: windows?
+                    #    push!(Base.DL_LOAD_PATH, dirname(PROGRAM_FILE))
+                    #end
+
+                    @static if Sys.isapple()
+                        m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
+                        if m != nothing
+                            resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
+                            return resources_dir
+                        else
+                            return pwd()
+                        end
+                    else
+                        # TODO: Should we do similar verification on linux/windows? Maybe use splitpath()?
+                        resources_dir = joinpath(dirname(dirname(full_binary_name)), "res")
+                        return resources_dir
                     end
-                else
-                    # TODO: Should we do similar verification on linux/windows? Maybe use splitpath()?
-                    resources_dir = joinpath(dirname(dirname(full_binary_name)), "res")
-                    cd(resources_dir)
                 end
-                println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
+                function cd_to_bundle_resources()
+                    resources_dir = get_bundle_resources_dir()
+                    cd(resources_dir)
+                    println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
+                    nothing
+                end
+                precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
             end
-            precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
-        """)
+        """ * """
+            Base.include(@__MODULE__, raw"$(abspath(juliaprog_main))")
+        """
+        )
     custom_program_c = "$(@__DIR__)/program.c"
     cc_flags = Sys.isapple() ? `-mmacosx-version-min=10.10 -headerpad_max_install_names` : nothing
 

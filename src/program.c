@@ -16,9 +16,6 @@
 JULIA_DEFINE_FAST_TLS()
 #endif
 
-// `cd_to_bundle_resources` is injected by ApplicaionBuilder.jl
-extern void cd_to_bundle_resources();
-
 // Declare C prototype of a function defined in Julia
 extern int julia_main(jl_array_t*);
 
@@ -55,8 +52,6 @@ int main(int argc, char *argv[])
         jl_arrayset(ARGS, s, i - 1);
     }
 
-    // Navigate to inside the Appication Bundle before running julia_main
-    // cd_to_bundle_resources();
     chdir("../Resources");
 
     // call the work function, and get back a value
