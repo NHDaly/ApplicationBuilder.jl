@@ -22,6 +22,7 @@ extern int julia_main(jl_array_t*);
 // main function (windows UTF16 -> UTF8 argument conversion code copied from julia's ui/repl.c)
 int main(int argc, char *argv[])
 {
+  // TODO: record current pwd
     // FIRST, CD TO BINARY DIRECTORY (so all libs load correctly)
     chdir(dirname(argv[0]));
 
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
         jl_arrayset(ARGS, s, i - 1);
     }
 
+    // TODO: Navigate back to the original pwd
     chdir("../Resources");
 
     // call the work function, and get back a value

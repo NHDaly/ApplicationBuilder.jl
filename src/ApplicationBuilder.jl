@@ -164,12 +164,6 @@ function build_app_bundle(juliaprog_main;
                 function get_bundle_resources_dir()
                     full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
 
-                    # NVM we're cd'ing instead
-                    ## Set up relative loadpaths
-                    #@static if Sys.islinux()  # TODO: windows?
-                    #    push!(Base.DL_LOAD_PATH, dirname(PROGRAM_FILE))
-                    #end
-
                     @static if Sys.isapple()
                         m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
                         if m != nothing
@@ -344,7 +338,7 @@ function build_app_bundle(juliaprog_main;
         println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
 
         # Delete the file we added to inject code.
-        rm(utils_injection_file)
+        #rm(utils_injection_file)
 
         # Delete the tmp build files
         function delete_if_present(file, path)
