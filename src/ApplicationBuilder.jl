@@ -136,43 +136,6 @@ function build_app_bundle(juliaprog_main;
         write(snoopfile, """Base.include(@__MODULE__, raw"$(abspath("$juliaprog_main"))");  julia_main([""]); """)
     end
 
-    # When Apple launches an app, it sets the current-working-directory to homedir.
-    # Therefore, we inject this function definition into the app, and call it from
-    # the C driver program.
-    utils_injection_file = joinpath(launcher_dir, "applicationbuilderutils.jl")
-    write(utils_injection_file,
-        raw"""
-            module ApplicationBuilderUtils
-                
-                function get_bundle_resources_dir()
-                    full_binary_name = PROGRAM_FILE  # PROGRAM_FILE is set manually in program.c
-
-                    @static if Sys.isapple()
-                        m = match(r".app/Contents/MacOS/[^/]+$", full_binary_name)
-                        if m != nothing
-                            resources_dir = joinpath(dirname(dirname(full_binary_name)), "Resources")
-                            return resources_dir
-                        else
-                            return pwd()
-                        end
-                    else
-                        # TODO: Should we do similar verification on linux/windows? Maybe use splitpath()?
-                        resources_dir = joinpath(dirname(dirname(full_binary_name)), "res")
-                        return resources_dir
-                    end
-                end
-                function cd_to_bundle_resources()
-                    resources_dir = get_bundle_resources_dir()
-                    cd(resources_dir)
-                    println("cd_to_bundle_resources(): Changed to new pwd: $(pwd())")
-                    nothing
-                end
-                precompile(cd_to_bundle_resources, ())  # Compile it for the binary.
-            end
-        """ * """
-            Base.include(@__MODULE__, raw"$(abspath(juliaprog_main))")
-        """
-        )
     custom_program_c = "$(@__DIR__)/program.c"
     cc_flags = Sys.isapple() ? `-mmacosx-version-min=10.10 -headerpad_max_install_names` : nothing
     # Provide an environment variable telling the code it's being compiled into a mac bundle.
@@ -180,7 +143,7 @@ function build_app_bundle(juliaprog_main;
             "COMPILING_APPLE_BUNDLE"=>"true") do
         verbose && println("  PackageCompiler.static_julia(...)")
         # Compile executable and copy julia libs to $launcher_dir.
-        PackageCompiler.build_executable(utils_injection_file, binary_name, custom_program_c;
+        PackageCompiler.build_executable(juliaprog_main, binary_name, custom_program_c;
                 builddir=launcher_dir, verbose=verbose, optimize="3",
                 snoopfile=snoopfile, debug="0", cpu_target=cpu_target,
                 compiled_modules="yes",
@@ -280,9 +243,6 @@ function build_app_bundle(juliaprog_main;
 
         # --------------- CLEAN UP before distributing ---------------
         println("~~~~~~ Cleaning up temporary files... ~~~~~~~")
-
-        # Delete the file we added to inject code.
-        rm(utils_injection_file)
 
         # Delete the tmp build files
         function delete_if_present(file, path)

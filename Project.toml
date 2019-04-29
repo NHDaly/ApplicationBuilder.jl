@@ -14,7 +14,8 @@ REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 julia = "1"
 
 [extras]
+ApplicationBuilderAppUtils = "96374992-6a10-11e9-2fa0-73472aac04df"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["ApplicationBuilderAppUtils", "Test"]

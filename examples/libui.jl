@@ -1,7 +1,5 @@
 using Libui
-
-
-using Libui
+using ApplicationBuilderAppUtils
 
 #const progressbar::Ptr{uiProgressBar} = C_NULL
 #const spinbox::Ptr{uiProgressBar} = C_NULL
@@ -168,7 +166,7 @@ end
 
 
 Base.@ccallable function julia_main(ARGS::Vector{String})::Cint
-    Main.ApplicationBuilderUtils.cd_to_bundle_resources()
+    ApplicationBuilderAppUtils.cd_to_bundle_resources()
     global progressbar = uiNewProgressBar()
     global spinbox = uiNewSpinbox(0, 100)
     global slider = uiNewSlider(0, 100)
