@@ -1,11 +1,11 @@
 # This file is machine-generated - editing it directly is not advised
 
 [[ApplicationBuilderAppUtils]]
-git-tree-sha1 = "b593e7a6c36b0a613628fd10b7670d601c1dd57f"
+git-tree-sha1 = "655b936802c498ddaee84c0824610250433f4ace"
 repo-rev = "master"
 repo-url = "https://github.com/NHDaly/ApplicationBuilderAppUtils.jl"
 uuid = "96374992-6a10-11e9-2fa0-73472aac04df"
-version = "0.4.1"
+version = "0.1.0"
 
 [[ArgParse]]
 deps = ["Compat", "Test", "TextWrap"]
