@@ -3,7 +3,7 @@
 [[ApplicationBuilderAppUtils]]
 git-tree-sha1 = "b593e7a6c36b0a613628fd10b7670d601c1dd57f"
 repo-rev = "master"
-repo-url = "https://github.com/NHDaly/ApplicationBuilderAppUtils"
+repo-url = "https://github.com/NHDaly/ApplicationBuilderAppUtils.jl"
 uuid = "96374992-6a10-11e9-2fa0-73472aac04df"
 version = "0.4.1"
 
