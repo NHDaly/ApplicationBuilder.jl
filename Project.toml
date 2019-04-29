@@ -4,6 +4,7 @@ authors = ["Nathan Daly <nhdaly@gmail.com>", "Ranjan Anantharaman <benditlikeran
 version = "0.4.1"
 
 [deps]
+ApplicationBuilderAppUtils = "96374992-6a10-11e9-2fa0-73472aac04df"
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
 PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
@@ -14,7 +15,8 @@ REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 julia = "1"
 
 [extras]
+ApplicationBuilderAppUtils = "96374992-6a10-11e9-2fa0-73472aac04df"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["ApplicationBuilderAppUtils", "Test"]

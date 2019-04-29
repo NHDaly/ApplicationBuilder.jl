@@ -9,7 +9,9 @@
 using SimpleDirectMediaLayer
 SDL2 = SimpleDirectMediaLayer
 
+using ApplicationBuilderAppUtils
 using Pkg
+
 
 fontFile = joinpath(Pkg.dir("SimpleDirectMediaLayer"),
                         "assets","fonts","FiraCode","ttf","FiraCode-Regular.ttf")
@@ -80,6 +82,7 @@ function helloFromSDL()
 end
 
 Base.@ccallable function julia_main(args::Vector{String})::Cint
+    ApplicationBuilderAppUtils.cd_to_bundle_resources()
     helloFromSDL()
     return 0
 end
