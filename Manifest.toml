@@ -1,3 +1,12 @@
+# This file is machine-generated - editing it directly is not advised
+
+[[ApplicationBuilderAppUtils]]
+git-tree-sha1 = "b593e7a6c36b0a613628fd10b7670d601c1dd57f"
+repo-rev = "master"
+repo-url = "https://github.com/NHDaly/ApplicationBuilderAppUtils.jl"
+uuid = "96374992-6a10-11e9-2fa0-73472aac04df"
+version = "0.4.1"
+
 [[ArgParse]]
 deps = ["Compat", "Test", "TextWrap"]
 git-tree-sha1 = "14d5789a99e6bea3e258d668ec09359a9feaf2d1"
@@ -40,7 +49,7 @@ deps = ["Mmap"]
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[Distributed]]
-deps = ["LinearAlgebra", "Random", "Serialization", "Sockets"]
+deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[Glob]]
@@ -56,7 +65,7 @@ uuid = "0862f596-cf2d-50af-8ef4-f2be67dfa83f"
 version = "0.2.1"
 
 [[InteractiveUtils]]
-deps = ["LinearAlgebra", "Markdown"]
+deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[LibCURL]]
@@ -157,7 +166,7 @@ uuid = "30578b45-9adc-5946-b283-645ec420af67"
 version = "0.4.0"
 
 [[UUIDs]]
-deps = ["Random"]
+deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [[Unicode]]
