@@ -156,13 +156,13 @@ function build_app_bundle(juliaprog_main;
         run(`$(Base.julia_cmd()) -e "using Pkg;
                                    Pkg.activate(raw\"$(user_project)\");
                                    Pkg.instantiate();
-                                   # Pkg.build();  # I think instantiate() also builds as needed?
+                                   Pkg.build();  # I think instantiate() also builds as needed?
                                    "`)
 
         # # Cancelling this because of file permissions errors....
         # And set all the paths to relative paths
         # TODO: Maybe, even better, i can just redefine the macros for FILE and DIR?
-        for (root, dirs, files) in walkdir("$resources_dir/dotjulia/packages")
+        for (root, dirs, files) in walkdir("$resources_dir")
             if endswith(root, "/deps") || endswith(root, "/deps/")
                 if "deps.jl" in files
                     f = joinpath(root, "deps.jl")
@@ -173,7 +173,9 @@ function build_app_bundle(juliaprog_main;
                         s = replace(s, "@__FILE__"=>"relpath(@__FILE__)")
                         s = replace(s, "relpath(@__DIR__)"=>"@__DIR__")  # So we don't grow relpath(relpath(...)) every build
                         s = replace(s, "@__DIR__"=>"relpath(@__DIR__)")
-                        #try write(f, s) catch end  # TODO: Some packages are read-only for some reason?
+
+                        s = replace(s, "macro checked_lib(libname, path)"=>"macro checked_lib(libname, path); path=relpath(path)")
+                        s = replace(s, "macro checked_lib(libname, path); path=relpath(path)"=>"macro checked_lib(libname, path)")
                         write(f, s)
                     #end
                 end
