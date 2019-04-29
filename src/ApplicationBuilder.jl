@@ -174,8 +174,8 @@ function build_app_bundle(juliaprog_main;
                         s = replace(s, "relpath(@__DIR__)"=>"@__DIR__")  # So we don't grow relpath(relpath(...)) every build
                         s = replace(s, "@__DIR__"=>"relpath(@__DIR__)")
 
-                        s = replace(s, "macro checked_lib(libname, path)"=>"macro checked_lib(libname, path); path=relpath(path)")
-                        s = replace(s, "macro checked_lib(libname, path); path=relpath(path)"=>"macro checked_lib(libname, path)")
+                        s = replace(s, "macro checked_lib(libname, path); path=relpath(path);"=>"macro checked_lib(libname, path)")
+                        s = replace(s, "macro checked_lib(libname, path)"=>"macro checked_lib(libname, path); path=relpath(path);")
                         write(f, s)
                     #end
                 end
