@@ -293,6 +293,7 @@ function build_app_bundle(juliaprog_main;
         end
         delete_if_present("*.ji",launcher_dir)
         delete_if_present("*.o",launcher_dir)
+        delete_if_present("*.a",launcher_dir)
 
         # Remove debug .dylib libraries and any precompiled .ji's
         delete_if_present("*.dSYM",libs_dir)
