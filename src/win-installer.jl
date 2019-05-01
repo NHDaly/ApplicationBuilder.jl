@@ -1,4 +1,4 @@
-JULIA_HOME = ENV["JULIA_HOME"]
+JULIA_HOME = get(ENV, "JULIA_HOME", "")
 LICENSE_PATH = joinpath(abspath(JULIA_HOME, ".."), "License.md")
 
 function win_installer(builddir; name = "nothing",
