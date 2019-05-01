@@ -1,7 +1,9 @@
 # This file is machine-generated - editing it directly is not advised
 
 [[ApplicationBuilderAppUtils]]
-path = "C:\\Users\\gabriel.freire\\.julia\\dev\\ApplicationBuilderAppUtils"
+git-tree-sha1 = "655b936802c498ddaee84c0824610250433f4ace"
+repo-rev = "master"
+repo-url = "https://github.com/NHDaly/ApplicationBuilderAppUtils.jl"
 uuid = "96374992-6a10-11e9-2fa0-73472aac04df"
 version = "0.1.0"
 
@@ -21,10 +23,10 @@ uuid = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
 version = "0.8.10"
 
 [[BinaryProvider]]
-deps = ["Libdl", "SHA"]
-git-tree-sha1 = "c7361ce8a2129f20b0e05a89f7070820cfed6648"
+deps = ["Libdl", "Pkg", "SHA", "Test"]
+git-tree-sha1 = "055eb2690182ebc31087859c3dd8598371d3ef9e"
 uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
-version = "0.5.4"
+version = "0.5.3"
 
 [[BufferedStreams]]
 deps = ["Compat", "Test"]
