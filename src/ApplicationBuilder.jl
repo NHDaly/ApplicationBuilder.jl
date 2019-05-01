@@ -9,6 +9,10 @@ export build_app_bundle
     include("mac_commandline_app.jl")
 end
 
+@static if Sys.iswindows()
+    include("win-installer.jl")
+end
+
 """
     build_app_bundle(juliaprog_main;
         appname, builddir, binary_name, resources, libraries, verbose, bundle_identifier,
@@ -32,7 +36,7 @@ function build_app_bundle(juliaprog_main;
         resources = String[], libraries = String[], verbose = false,
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
-        snoopfile = nothing, autosnoop = false, cpu_target="x86-64",
+        snoopfile = nothing, autosnoop = false, cpu_target=nothing,
         create_installer = false, commandline_app = false,
     )
 

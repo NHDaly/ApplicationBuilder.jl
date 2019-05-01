@@ -1,7 +1,7 @@
 using ApplicationBuilder
 using Pkg
 
-examples_blink = joinpath(@__DIR__, "..", "..", "examples", "sdl.jl")
+examples_blink = joinpath(abspath(@__DIR__, "..", ".."), "examples", "sdl.jl")
 
 # Allow this file to be called either as a standalone file to build the above
 # example, or from runtests.jl using a globally-defined builddir.

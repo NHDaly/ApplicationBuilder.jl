@@ -1,5 +1,8 @@
+JULIA_HOME = ENV["JULIA_HOME"]
+LICENSE_PATH = joinpath(abspath(JULIA_HOME, ".."), "License.md")
+
 function win_installer(builddir; name = "nothing",
-				license = "$JULIA_HOME/../License.md")
+				license = LICENSE_PATH)
 
 	# check = success(`makensis`)
 	# !check && throw(ErrorException("NSIS not found in path. Exiting."))
@@ -29,7 +32,7 @@ function win_installer(builddir; name = "nothing",
 	"""
 
 	@info "Creating installer at $builddir"
-	nsis_file = joinpath(builddir, "..", "$name.nsi")
+	nsis_file = joinpath(abspath(builddir, ".."), "$name.nsi")
 	open(nsis_file, "w") do f
 		write(f, nsis_commands)
 	end
