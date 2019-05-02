@@ -50,7 +50,7 @@ end
 @testset "HelloWorld.app" begin
     @test 0 == include("build_examples/hello.jl")
     @test isdir("$builddir/HelloWorld.app")
-    @test success(`$builddir/HelloWorld.app/Contents/MacOS/hello`)
+    @test success(`$builddir/HelloWorld.app/Contents/MacOS/HelloWorld`)
 
     # There shouldn't be a Libraries dir since none specified.
     @test !isdir("$builddir/HelloWorld.app/Contents/Libraries")
@@ -58,7 +58,7 @@ end
     # Ensure all dependencies on Julia libs are internal, so the app is portable.
     @testset "No external Dependencies" begin
         @test !success(pipeline(
-                        `otool -l "$builddir/HelloWorld.app/Contents/MacOS/hello"`,
+                        `otool -l "$builddir/HelloWorld.app/Contents/MacOS/HelloWorld"`,
                         `grep 'julia'`,  # Get all julia deps
                         `grep -v '@rpath'`))  # make sure all are relative.
     end
