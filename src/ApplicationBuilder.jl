@@ -10,6 +10,7 @@ export build_app_bundle
 end
 
 @static if Sys.iswindows()
+    include("win_commandline_app.jl")
     include("win-installer.jl")
 end
 
@@ -52,6 +53,10 @@ function build_app_bundle(juliaprog_main;
         if occursin(r"\s", bundle_identifier) throw(ArgumentError("Bundle identifier must not contain whitespace.")) end
         if occursin(r"[^A-Za-z0-9-.]", bundle_identifier) throw(ArgumentError("Bundle identifier must contain only alphanumeric characters (A-Z,a-z,0-9), hyphen (-), and period (.).")) end
 
+    elseif Sys.iswindows()
+        if commandline_app
+            @warn "Will create windows script"
+        end
     else
         if commandline_app
             @warn "Ignore `commandline_app=true` on non-macOS system."
@@ -87,7 +92,7 @@ function build_app_bundle(juliaprog_main;
     end
 
     applet_name = nothing
-    if commandline_app  # MacOS only
+    if commandline_app  # MacOS and Windows only
         # TODO: What if the user specifies Resources that could overwrite
         #  applet resources? (ie Scripts/ or applet.rsrc)
         applet_name = build_commandline_app_bundle(builddir, binary_name, appname, verbose)
