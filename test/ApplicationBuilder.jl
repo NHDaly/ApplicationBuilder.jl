@@ -1,5 +1,6 @@
 # MacOS tests
 
+push!(LOAD_PATH, "..\\..\\")
 using Test
 using Pkg
 using ApplicationBuilder

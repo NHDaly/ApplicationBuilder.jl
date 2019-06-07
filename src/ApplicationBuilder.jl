@@ -39,6 +39,7 @@ function build_app_bundle(juliaprog_main;
         certificate = nothing, entitlements_file = nothing,
         snoopfile = nothing, autosnoop = false, cpu_target=nothing,
         create_installer = false, commandline_app = false,
+        installer_compiler=SetupCompilers.iss
     )
 
     # ----------- Input sanity checking --------------
@@ -276,7 +277,7 @@ function build_app_bundle(juliaprog_main;
             end
         end
     elseif Sys.iswindows()
-        create_installer && win_installer(builddir, name = appname)
+        create_installer && win_installer(builddir, name=appname, installer_compiler=installer_compiler)
     end
 
     println("~~~~~~ Done building '$appbundle'! ~~~~~~~")
