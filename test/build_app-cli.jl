@@ -1,5 +1,4 @@
 
-push!(LOAD_PATH, "..\\..\\")
 using Test
 
 # prevent shell_split on removing all slashes
