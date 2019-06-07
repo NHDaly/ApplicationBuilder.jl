@@ -39,7 +39,7 @@ function build_app_bundle(juliaprog_main;
         certificate = nothing, entitlements_file = nothing,
         snoopfile = nothing, autosnoop = false, cpu_target=nothing,
         create_installer = false, commandline_app = false,
-        installer_compiler=SetupCompilers.iss
+        installer_compiler="iss"
     )
 
     # ----------- Input sanity checking --------------
