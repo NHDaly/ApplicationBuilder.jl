@@ -10,6 +10,7 @@ builddir = mktempdir()
 @testset "HelloWorld.app" begin
     @test 0 == include("build_examples/commandline_hello.jl")
     @test isdir(joinpath(builddir, "hello"))
-    @test success(`$builddir/hello/bin/hello`)
+    p = joinpath(builddir,"hello", "bin", "hello")
+    @test success(`$p`)
     #@test success(`open $builddir/hello.app`)
 end

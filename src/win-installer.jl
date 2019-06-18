@@ -1,39 +1,152 @@
+JULIA_HOME = get(ENV, "JULIA_HOME", "")
+LICENSE_PATH = joinpath(abspath(JULIA_HOME, ".."), "License.md")
+
+baremodule SetupCompilers
+	iss="iss"
+	nsis="nsis"
+end
+
+function _hasfilesin(path::String)::Bool
+	for (root, dir, files) in walkdir(path)
+		if length(files) > 0
+			return true
+		end
+	end
+	return false
+end
+
 function win_installer(builddir; name = "nothing",
-				license = "$JULIA_HOME/../License.md")
+				license = LICENSE_PATH, installer_compiler=SetupCompilers.iss)
 
 	# check = success(`makensis`)
 	# !check && throw(ErrorException("NSIS not found in path. Exiting."))
 
-	nsis_commands = """
-	# set the name of the installer
-	Outfile "$(name)_Installer.exe"
+	commands = if installer_compiler == SetupCompilers.nsis 
+		"""
+		# set the name of the installer
+		Name "$(name)"
+		Outfile "$(name)_Installer.exe"
 
-	# Default install directory
-	InstallDir "\$LOCALAPPDATA"
+		# Default install directory
+		InstallDir "\$LOCALAPPDATA"
 
-	Page license
-	Page directory
-	Page instfiles
+		Page license
+		Page directory
+		Page instfiles
 
-	LicenseData "$license"
+		LicenseData "$license"
 
-	# create a default section.
-	Section "Install"
+		# create a default section.
+		Section "Install"
 
-		SetOutPath "$(joinpath("\$INSTDIR", name))"
-		File /nonfatal /a /r "$builddir"
+			SetOutPath "$(joinpath("\$INSTDIR", name))"
+			File /nonfatal /a /r "$builddir"
 
-		CreateShortcut "$(joinpath("\$INSTDIR", name, "$name.lnk"))" "$(joinpath(builddir, "core", "blink.exe"))"
+			CreateShortcut "$(joinpath("\$INSTDIR", name, "$name.lnk"))" "$(joinpath(builddir, "core", "blink.exe"))"
 
-	SectionEnd
-	"""
+		SectionEnd
+		"""
+	elseif installer_compiler == SetupCompilers.iss
+		res_path = joinpath(builddir, name, "res")
+		lib_path = joinpath(builddir, name, "lib")
+		files = 
+		"""
+		[Files]
+		Source: "$(joinpath(builddir, name, "bin") * "\\*")"; DestDir: "{app}\\bin"; Flags: ignoreversion
+		"""
+
+		if isdir(res_path) && _hasfilesin(res_path)
+			files = "$files\nSource: \"$(res_path * "\\*")\"; DestDir: \"{app}\\res\"; Flags: ignoreversion"
+		end
+		
+		if isdir(lib_path) && _hasfilesin(lib_path)
+			files = "$files\nSource: \"$(lib_path * "\\*")\"; DestDir: \"{app}\\lib\"; Flags: ignoreversion"
+		end
+		
+		"""
+		; $name InnoSetup Compiler 
+		; This software is property of Gabriel Freire. All Rights reserved.
+		; Copyright 2019
+		; Requires InnoSetup Latest (5.5 tested)
+		; This script compiles the setup file for $name in the SETUP folder
+	
+		#define MyAppName "$name"
+		#define MyAppVersion "1.0"
+		#define ApplicationVersion GetStringFileInfo("$(joinpath(builddir, name, "bin", "$(name).exe"))", "FileVersion")
+		#define MyAppExeName "$name.exe"
+	
+	
+		[Setup]
+		AppId={{802D0907-22CE-4E43-8FAB-017F687159C4}
+		AppName={#MyAppName}
+		AppVersion={#ApplicationVersion}
+		AppVerName={#MyAppName}
+		VersionInfoVersion={#ApplicationVersion}
+		DefaultDirName={pf}\\{#MyAppName}
+		DisableDirPage=yes
+		DisableProgramGroupPage=yes
+		OutputDir=.\\
+		OutputBaseFilename=$(name * "Setup")
+		UninstallDisplayIcon={app}\\{#MyAppExeName}
+		Compression=lzma
+		SolidCompression=yes
+		; Tell Windows Explorer to reload the environment
+		ChangesEnvironment=yes
+		UsePreviousAppDir=False
+	
+		[CustomMessages]
+		AppAddPath=Add application directory to your environmental path (required)
+	
+		[Languages]
+		Name: "english"; MessagesFile: "compiler:Default.isl"
+	
+		[Tasks]
+		Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+		Name: modifypath; Description:{cm:AppAddPath}; Flags: unchecked
+	
+		[Registry]
+		Root: HKCU; Subkey: "Environment"; ValueType:expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\\bin"; Flags: preservestringtype
+		
+		$(files)
+	
+		[Code]
+	
+		var CancelWithoutPrompt: boolean;
+	
+		function InitializeSetup(): Boolean;
+		begin
+		CancelWithoutPrompt := false;
+		result := true;
+		Log('{#ApplicationVersion}');
+		end;
+	
+		procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+		begin
+		if CurPageID=wpInstalling then
+			Confirm := not CancelWithoutPrompt;
+		end;
+	
+		[Icons]
+		Name: "{commonprograms}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"
+		Name: "{commondesktop}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"; Tasks: desktopicon
+		Name: "{commonstartup}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"; 
+		"""
+	else
+		throw(ArgumentError("Unknown compiler: $installer_compiler"))
+	end
+
+	ext = if installer_compiler == SetupCompilers.nsis
+		"nsi"
+	elseif installer_compiler == SetupCompilers.iss
+		"iss"
+	end
 
 	@info "Creating installer at $builddir"
-	nsis_file = joinpath(builddir, "..", "$name.nsi")
-	open(nsis_file, "w") do f
-		write(f, nsis_commands)
+	compiler_file = joinpath(abspath(builddir, ".."), "$name.$ext")
+	open(compiler_file, "w") do f
+		write(f, commands)
 	end
-	run(`makensis $nsis_file`)
+	# run(`makensis $nsis_file`)
 
 	@info "Created installer successfully."
 

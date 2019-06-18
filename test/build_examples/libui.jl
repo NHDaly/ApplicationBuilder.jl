@@ -12,7 +12,7 @@ libUIPkg = Pkg.dir("Libui")
 
 using Libui
 
-ApplicationBuilder.build_app_bundle(joinpath(@__DIR__, "..", "..", "examples", "libui.jl");
+ApplicationBuilder.build_app_bundle(joinpath(abspath(@__DIR__, "..", ".."), "examples", "libui.jl");
     verbose = true,
     resources = [],
     libraries = [ Libui.libui ],
