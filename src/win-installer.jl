@@ -56,11 +56,11 @@ function win_installer(builddir; name = "nothing",
 		"""
 
 		if isdir(res_path) && _hasfilesin(res_path)
-			files *= """\nSource: "$(res_path * "\\*")"; DestDir: "{app}\\res"; Flags: ignoreversion"""
+			files = "$files\nSource: \"$(res_path * "\\*")\"; DestDir: \"{app}\\res\"; Flags: ignoreversion"
 		end
 		
 		if isdir(lib_path) && _hasfilesin(lib_path)
-			files *= """\nSource: "$(lib_path * "\\*")"; DestDir: "{app}\\lib"; Flags: ignoreversion"""
+			files = "$files\nSource: \"$(lib_path * "\\*")\"; DestDir: \"{app}\\lib\"; Flags: ignoreversion"
 		end
 		
 		"""

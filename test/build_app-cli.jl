@@ -22,12 +22,6 @@ builddir = mktempdir()
   eval(:(ARGS = $NEWARGS))
   
   @test 0 == include(build_app_jl)
-  println("=== Build Directory ===")
-  println(readdir(builddir))
-  println(readdir("$builddir/HelloWorld"))
-  println(readdir("$builddir/HelloWorld/bin"))
-  println(readdir("$builddir/HelloWorld/res"))
-  println(readdir("$builddir/HelloWorld/lib"))
 
   if Sys.isapple()
     @test isdir("$builddir/HelloWorld.app")
