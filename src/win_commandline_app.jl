@@ -1,8 +1,8 @@
 function get_commandline_sh_script(appname)
     """
     @echo off
-    set dir=%~dp0
-    call %dir%$(appname).exe %*
+    set source_dir=%~dp0
+    call "%source_dir%$(appname).exe" %*
     """
 end
     
@@ -17,7 +17,7 @@ function build_commandline_app_bundle(builddir, binary_name, appname, verbose)
     exe_dir = "bin"  # Put the binaries next to the applet in MacOS.
     script_name = "$(binary_name).bat"
     if binary_name == appname  # Prevent collisions.
-        script_name = "$(binary_name)_exec.bat"
+        script_name = "$(binary_name)_.bat"
     end
     script_path = joinpath(app_path, exe_dir, script_name)
     mkpath(dirname(script_path))

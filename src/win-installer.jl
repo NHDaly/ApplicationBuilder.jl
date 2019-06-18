@@ -6,6 +6,15 @@ baremodule SetupCompilers
 	nsis="nsis"
 end
 
+function _hasfilesin(path::String)::Bool
+	for (root, dir, files) in walkdir(path)
+		if length(files) > 0
+			return true
+		end
+	end
+	return false
+end
+
 function win_installer(builddir; name = "nothing",
 				license = LICENSE_PATH, installer_compiler=SetupCompilers.iss)
 
@@ -38,6 +47,22 @@ function win_installer(builddir; name = "nothing",
 		SectionEnd
 		"""
 	elseif installer_compiler == SetupCompilers.iss
+		res_path = joinpath(builddir, name, "res")
+		lib_path = joinpath(builddir, name, "lib")
+		files = 
+		"""
+		[Files]
+		Source: "$(joinpath(builddir, name, "bin") * "\\*")"; DestDir: "{app}\\bin"; Flags: ignoreversion
+		"""
+
+		if isdir(res_path) && _hasfilesin(res_path)
+			files *= """\nSource: "$(res_path * "\\*")"; DestDir: "{app}\\res"; Flags: ignoreversion"""
+		end
+		
+		if isdir(lib_path) && _hasfilesin(lib_path)
+			files *= """\nSource: "$(lib_path * "\\*")"; DestDir: "{app}\\lib"; Flags: ignoreversion"""
+		end
+		
 		"""
 		; $name InnoSetup Compiler 
 		; This software is property of Gabriel Freire. All Rights reserved.
@@ -67,6 +92,7 @@ function win_installer(builddir; name = "nothing",
 		SolidCompression=yes
 		; Tell Windows Explorer to reload the environment
 		ChangesEnvironment=yes
+		UsePreviousAppDir=False
 	
 		[CustomMessages]
 		AppAddPath=Add application directory to your environmental path (required)
@@ -81,10 +107,7 @@ function win_installer(builddir; name = "nothing",
 		[Registry]
 		Root: HKCU; Subkey: "Environment"; ValueType:expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\\bin"; Flags: preservestringtype
 		
-		[Files]
-		Source: "$(joinpath(builddir, name, "bin") * "\\*")"; DestDir: "{app}\\bin"; Flags: ignoreversion
-		Source: "$(joinpath(builddir, name, "res") * "\\*")"; DestDir: "{app}\\res"; Flags: ignoreversion
-		Source: "$(joinpath(builddir, name, "lib") * "\\*")"; DestDir: "{app}\\lib"; Flags: ignoreversion
+		$(files)
 	
 		[Code]
 	
