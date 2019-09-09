@@ -33,7 +33,7 @@ function build_app_bundle(juliaprog_main;
         bundle_identifier = nothing, app_version = "0.1", icns_file = nothing,
         certificate = nothing, entitlements_file = nothing,
         snoopfile = nothing, autosnoop = false, cpu_target="x86-64",
-        create_installer = false, commandline_app = false,
+        create_installer = false, commandline_app = false, check_bounds = nothing, inline = nothing
     )
 
     # ----------- Input sanity checking --------------
@@ -147,7 +147,7 @@ function build_app_bundle(juliaprog_main;
                 builddir=launcher_dir, verbose=verbose, optimize="3",
                 snoopfile=snoopfile, debug="0", cpu_target=cpu_target,
                 compiled_modules="yes",
-                cc_flags=cc_flags)
+                cc_flags=cc_flags, check_bounds=check_bounds, inline=inline)
     end
 
     @static if Sys.isapple()
