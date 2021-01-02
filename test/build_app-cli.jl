@@ -14,8 +14,10 @@ res2 = joinpath(@__DIR__, "runtests.jl") # lol sure this is a resource, why not.
 NEWARGS = Base.shell_split("""--verbose
         -R $res1 --resource $res2 -L $res1 --lib $res2
         $examples_hello "HelloWorld" $builddir""")
-eval(:(ARGS = $NEWARGS))
+OLDARGS = copy(ARGS)
+@eval (empty!(ARGS); append!(ARGS, $NEWARGS))
 @test 0 == include("$build_app_jl")
+@eval (empty!(ARGS); append!(ARGS, $OLDARGS))
 @test isdir("$builddir/HelloWorld.app")
 @test isfile("$builddir/HelloWorld.app/Contents/MacOS/hello")
 
@@ -23,6 +25,7 @@ eval(:(ARGS = $NEWARGS))
 @test isfile("$builddir/HelloWorld.app/Contents/Resources/$(basename(res1))")
 @test isfile("$builddir/HelloWorld.app/Contents/Resources/$(basename(res2))")
 @test isfile("$builddir/HelloWorld.app/Contents/Libraries/$(basename(res1))")
+
 end
 
 @testset "Exits without juliaprog_main" begin
